@@ -32,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class FontResources {
                     throw new RuntimeException("Font Atlas '" + name + "/atlas.png' not found.");
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         });
 
@@ -93,7 +94,7 @@ public class FontResources {
                     throw new RuntimeException("Font Unknown Character '" + name + "/unknown.txt' not found.");
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         });
 
@@ -146,7 +147,7 @@ public class FontResources {
                     throw new RuntimeException("Font Metrics '" + name + "/metrics.csv' not found.");
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         });
         

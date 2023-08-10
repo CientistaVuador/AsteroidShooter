@@ -26,6 +26,9 @@
  */
 package cientistavuador.asteroidshooter;
 
+import cientistavuador.asteroidshooter.resources.mesh.MeshData;
+import cientistavuador.asteroidshooter.resources.mesh.MeshResources;
+
 /**
  *
  * @author Cien
@@ -43,7 +46,7 @@ public class Game {
     }
 
     public void start() {
-        
+        MeshData data = MeshResources.load("asteroid.obj");
     }
     
     public void loop() {

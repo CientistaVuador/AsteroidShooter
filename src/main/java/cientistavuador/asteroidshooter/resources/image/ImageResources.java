@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.resources.image;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
@@ -64,7 +65,7 @@ public class ImageResources {
                 return load(name, in, conn.getContentLength(), desiredChannels);
             }
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -79,7 +80,7 @@ public class ImageResources {
                     imageFile.put(buffer, 0, r);
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
 
             imageFile.flip();
