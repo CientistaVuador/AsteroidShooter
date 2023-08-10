@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.resources.mesh;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -78,9 +79,13 @@ public class MeshResources {
     }
 
     public MeshData get() throws IOException {
+        InputStream stream = MeshResources.class.getResourceAsStream(this.name);
+        if (stream == null) {
+            throw new IOException("'"+this.name+"' not found.");
+        }
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
-                        MeshResources.class.getResourceAsStream(this.name),
+                        stream,
                         StandardCharsets.UTF_8)
         )) {
             String line;
