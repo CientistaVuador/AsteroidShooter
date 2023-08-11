@@ -26,7 +26,9 @@
  */
 package cientistavuador.asteroidshooter;
 
+import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.text.GLFonts;
+import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -258,10 +260,12 @@ public class Main {
         if (maxTextureSize < 8192) {
             throw new IllegalStateException("Max texture size must be 8192 or more! Update your drivers or buy a new GPU.");
         }
-        
+
         Main.checkGLError();
         
         GLFonts.init(); //static initialize
+        Geometries.init(); //static initialize
+        Textures.init(); //static initialize
         Game.get(); //static initialize
 
         Main.checkGLError();
@@ -300,11 +304,11 @@ public class Main {
         while (!glfwWindowShouldClose(WINDOW_POINTER)) {
             Main.TPF = (System.nanoTime() - timeFrameBegin) / 1E9d;
             timeFrameBegin = System.nanoTime();
-            
+
             Main.NUMBER_OF_DRAWCALLS = 0;
             Main.NUMBER_OF_VERTICES = 0;
             Main.WINDOW_TITLE = "Asteroid Shooter - FPS: " + Main.FPS;
-            
+
             if (SPIKE_LAG_WARNINGS) {
                 int tpfFps = (int) (1.0 / Main.TPF);
                 if (tpfFps < 60 && ((Main.FPS - tpfFps) > 30)) {
@@ -314,7 +318,7 @@ public class Main {
 
             glfwPollEvents();
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            
+
             Runnable r;
             while ((r = MAIN_TASKS.poll()) != null) {
                 r.run();

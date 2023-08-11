@@ -24,61 +24,32 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.resources.mesh;
-
-import java.util.Arrays;
+package cientistavuador.asteroidshooter.geometry;
 
 /**
  *
  * @author Cien
  */
-public class MeshData {
+public class Geometries {
 
-    public static final int SIZE = 3 + 2 + 3;
+    public static final int ASTEROID;
+    public static final int ASTEROID_COUNT;
     
-    //position (vec3), texture/uv (vec2), normal (vec3)
-    private final float[] vertices;
-    private final int[] indices;
-    
-    public MeshData(float[] vertices, int[] indices) {
-        this.vertices = vertices;
-        this.indices = indices;
-    }
-
-    public float[] getVertices() {
-        return vertices;
-    }
-
-    public int[] getIndices() {
-        return indices;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 97 * hash + Arrays.hashCode(this.vertices);
-        hash = 97 * hash + Arrays.hashCode(this.indices);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MeshData other = (MeshData) obj;
-        if (!Arrays.equals(this.vertices, other.vertices)) {
-            return false;
-        }
-        return Arrays.equals(this.indices, other.indices);
+    static {
+        int[] vaos = GeometriesLoader.load(
+                "asteroid.obj"
+        );
+        
+        ASTEROID = vaos[(2 * 0) + 0];
+        ASTEROID_COUNT = vaos[(2 * 0) + 1];
     }
     
-    
-    
+    public static void init() {
+
+    }
+
+    private Geometries() {
+
+    }
+
 }

@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>cientistavuador</groupId>
-  <artifactId>ShadowVolumeExperiment</artifactId>
-  <version>1.4</version>
+  <artifactId>AsteroidShooter</artifactId>
+  <version>1.0</version>
   <build>
     <resources>
       <resource>
@@ -17,7 +17,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>ShadowVolumeExperiment</finalName>
+    <finalName>AsteroidShooter</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -44,6 +44,13 @@
           <shadedClassifierName>build</shadedClassifierName>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <showDeprecation>true</showDeprecation>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencyManagement>
@@ -58,7 +65,7 @@
     </dependencies>
   </dependencyManagement>
   <properties>
-    <exec.mainClass>cientistavuador.shadowvolumeexperiment.MainWrapper</exec.mainClass>
+    <exec.mainClass>cientistavuador.asteroidshooter.MainWrapper</exec.mainClass>
     <maven.compiler.source>17</maven.compiler.source>
     <lwjgl.natives>natives-windows</lwjgl.natives>
     <joml.version>1.10.5</joml.version>

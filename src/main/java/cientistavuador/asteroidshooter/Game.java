@@ -26,8 +26,12 @@
  */
 package cientistavuador.asteroidshooter;
 
-import cientistavuador.asteroidshooter.resources.mesh.MeshData;
-import cientistavuador.asteroidshooter.resources.mesh.MeshResources;
+import cientistavuador.asteroidshooter.camera.PerspectiveCamera;
+import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.texture.Textures;
+import org.joml.Matrix4f;
+import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
@@ -41,15 +45,27 @@ public class Game {
         return GAME;
     }
     
+    private final PerspectiveCamera camera = new PerspectiveCamera();
+    private final Matrix4f asteroidModel = new Matrix4f();
+    
     private Game() {
 
     }
 
     public void start() {
-        MeshData data = MeshResources.load("asteroid.obj");
+        camera.setPosition(0, 0, 1);
     }
     
     public void loop() {
+        this.asteroidModel.rotateY((float) Math.toRadians(Main.TPF * 2.5f));
+        
+        glUseProgram(GeometryProgram.SHADER_PROGRAM);
+        glBindVertexArray(Geometries.ASTEROID);
+        GeometryProgram.sendUniforms(new Matrix4f(camera.getProjectionView()), this.asteroidModel, Textures.STONE);
+        glDrawElements(GL_TRIANGLES, Geometries.ASTEROID_COUNT, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+        
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";
     }
 

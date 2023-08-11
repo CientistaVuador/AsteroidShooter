@@ -127,7 +127,7 @@ public class MeshResources {
         this.normals[this.normalsIndex + 2] = z;
         this.normalsIndex += 3;
     }
-
+    
     private void pushFaceIndices(int position, int texture, int normal) {
         if ((this.facesIndex + 3) > this.faces.length) {
             this.faces = Arrays.copyOf(this.faces, (this.faces.length * 2) + 3);
