@@ -31,6 +31,7 @@ import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
@@ -53,23 +54,23 @@ public class AsteroidController {
     public void setDebugEnabled(boolean debugEnabled) {
         this.debugEnabled = debugEnabled;
     }
-    
+
     public Asteroid spawnAsteroid() {
-        final float xMax = 1f - (Asteroid.ASTEROID_WIDTH / 2f);
-        final float xMin = -1f + (Asteroid.ASTEROID_WIDTH / 2f);
-        final float yMin = 1.05f + (Asteroid.ASTEROID_HEIGHT / 2f);
-        final float yMax = 1.05f + (Asteroid.ASTEROID_HEIGHT * 4f);
+        final float distance = 1.4f;
         Asteroid asteroid = new Asteroid(this);
         
         for (int i = 0; i < 5; i++) {
-            float x = (float) Math.random();
-            x *= (xMax - xMin);
-            x += xMin;
-            float y = (float) Math.random();
-            y *= (yMax - yMin);
-            y += yMin;
-
-            asteroid.getPosition().set(x, y, 0f);
+            Vector3f initialPosition = new Vector3f()
+                    .set((Math.random() * 2f) - 1f, (Math.random() * 2f) - 1f, 0)
+                    .normalize(distance);
+            Vector3f finalPosition = new Vector3f()
+                    .set(initialPosition)
+                    .negate()
+                    .rotateZ((float) ((Math.random() - 0.5) * (Math.PI / 2.0)))
+                    .normalize(distance);
+            
+            asteroid.getInitialPosition().set(initialPosition);
+            asteroid.getFinalPosition().set(finalPosition);
             
             boolean collision = false;
             for (Asteroid other : this.asterois) {
@@ -82,12 +83,12 @@ public class AsteroidController {
                 break;
             }
         }
-        
+
         this.asterois.add(asteroid);
         return asteroid;
     }
-    
-    public void onAsteroidFall(Asteroid e) {
+
+    public void onAsteroidRemove(Asteroid e) {
         this.asterois.remove(e);
     }
 
@@ -100,8 +101,9 @@ public class AsteroidController {
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID);
         for (Asteroid a : copy) {
-            if ((a.getPosition().y() + (Asteroid.ASTEROID_HEIGHT / 2f)) < -1f) {
-                onAsteroidFall(a);
+            if (a.shouldBeRemoved()) {
+                onAsteroidRemove(a);
+                continue;
             }
             a.loop(projectionView);
             if (isDebugEnabled()) {

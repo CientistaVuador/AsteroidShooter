@@ -33,6 +33,7 @@ import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
@@ -44,15 +45,20 @@ public class Asteroid implements Aab {
     public static final float ASTEROID_RENDER_SCALE = 0.15f;
     public static final float ASTEROID_WIDTH = 0.15f;
     public static final float ASTEROID_HEIGHT = 0.15f;
-    public static final float ASTEROID_SPEED = -0.2f;
+    public static final float ASTEROID_SPEED = 0.2f;
     
     private final AsteroidController controller;
-    private final Vector3f position = new Vector3f();
     private final Matrix4f model = new Matrix4f();
     
     private final float rotationX = (float) Math.toRadians(Math.random() * 360f);
     private final float rotationY = (float) Math.toRadians(Math.random() * 360f);
     private float rotationZ = 0f;
+    
+    private final Vector3f initialPosition = new Vector3f();
+    private final Vector3f finalPosition = new Vector3f();
+    private float currentPosition = 0f;
+    
+    private final Vector3f position = new Vector3f();
     
     public Asteroid(AsteroidController controller) {
         this.controller = controller;
@@ -61,13 +67,38 @@ public class Asteroid implements Aab {
     public AsteroidController getController() {
         return controller;
     }
-    
-    public Vector3f getPosition() {
+
+    public Vector3f getInitialPosition() {
+        return initialPosition;
+    }
+
+    public Vector3f getFinalPosition() {
+        return finalPosition;
+    }
+
+    public float getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setCurrentPosition(float currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public Vector3fc getPosition() {
         return position;
     }
     
+    public boolean shouldBeRemoved() {
+        return this.currentPosition >= 1f;
+    }
+    
     public void loop(Matrix4f projectionView) {
-        this.position.add(0f, (float) (ASTEROID_SPEED * Main.TPF), 0f);
+        this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
+        
+        float x = (this.initialPosition.x() * this.currentPosition) + (this.finalPosition.x() * (1f - this.currentPosition));
+        float y = (this.initialPosition.y() * this.currentPosition) + (this.finalPosition.y() * (1f - this.currentPosition));
+        float z = (this.initialPosition.z() * this.currentPosition) + (this.finalPosition.z() * (1f - this.currentPosition));
+        this.position.set(x, y, z);
         
         this.rotationZ += Main.TPF;
         if (this.rotationZ > Math.PI * 2f) {
