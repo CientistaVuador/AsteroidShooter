@@ -38,26 +38,78 @@ import static org.lwjgl.opengl.GL33C.*;
  * @author Cien
  */
 public class AsteroidController {
-    
+
     private final List<Asteroid> asterois = new ArrayList<>();
-    
+    private boolean debugEnabled = false;
+
     public AsteroidController() {
+
+    }
+
+    public boolean isDebugEnabled() {
+        return debugEnabled;
+    }
+
+    public void setDebugEnabled(boolean debugEnabled) {
+        this.debugEnabled = debugEnabled;
+    }
+    
+    public Asteroid spawnAsteroid() {
+        final float xMax = 1f - (Asteroid.ASTEROID_WIDTH / 2f);
+        final float xMin = -1f + (Asteroid.ASTEROID_WIDTH / 2f);
+        final float yMin = 1.05f + (Asteroid.ASTEROID_HEIGHT / 2f);
+        final float yMax = 1.05f + (Asteroid.ASTEROID_HEIGHT * 4f);
+        Asteroid asteroid = new Asteroid(this);
         
+        for (int i = 0; i < 5; i++) {
+            float x = (float) Math.random();
+            x *= (xMax - xMin);
+            x += xMin;
+            float y = (float) Math.random();
+            y *= (yMax - yMin);
+            y += yMin;
+
+            asteroid.getPosition().set(x, y, 0f);
+            
+            boolean collision = false;
+            for (Asteroid other : this.asterois) {
+                if (asteroid.testAab(other)) {
+                    collision = true;
+                    break;
+                }
+            }
+            if (!collision) {
+                break;
+            }
+        }
+        
+        this.asterois.add(asteroid);
+        return asteroid;
+    }
+    
+    public void onAsteroidFall(Asteroid e) {
+        this.asterois.remove(e);
     }
 
     public List<Asteroid> getAsterois() {
         return asterois;
     }
-    
+
     public void loop(Matrix4f projectionView) {
         List<Asteroid> copy = new ArrayList<>(this.asterois);
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID);
-        for (Asteroid a:copy) {
+        for (Asteroid a : copy) {
+            if ((a.getPosition().y() + (Asteroid.ASTEROID_HEIGHT / 2f)) < -1f) {
+                onAsteroidFall(a);
+            }
             a.loop(projectionView);
+            if (isDebugEnabled()) {
+                a.queueAabRender();
+            }
         }
         glBindVertexArray(0);
         glUseProgram(0);
     }
-    
+
 }

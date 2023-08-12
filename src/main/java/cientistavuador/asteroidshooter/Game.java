@@ -28,10 +28,11 @@ package cientistavuador.asteroidshooter;
 
 import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
+import cientistavuador.asteroidshooter.camera.OrthoCamera;
 import cientistavuador.asteroidshooter.camera.PerspectiveCamera;
-import cientistavuador.asteroidshooter.geometry.Geometries;
-import cientistavuador.asteroidshooter.shader.GeometryProgram;
-import cientistavuador.asteroidshooter.texture.Textures;
+import cientistavuador.asteroidshooter.debug.AabRender;
+import cientistavuador.asteroidshooter.ubo.CameraUBO;
+import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import org.joml.Matrix4f;
 import static org.lwjgl.opengl.GL33C.*;
 
@@ -47,7 +48,7 @@ public class Game {
         return GAME;
     }
     
-    private final PerspectiveCamera camera = new PerspectiveCamera();
+    private final OrthoCamera camera = new OrthoCamera();
     private final AsteroidController controller = new AsteroidController();
     
     private Game() {
@@ -55,14 +56,28 @@ public class Game {
     }
 
     public void start() {
-        camera.setPosition(0, 0, 1);
-        Asteroid asteroid = new Asteroid(this.controller);
-        asteroid.getPosition().set(0f, 0f, 0f);
-        controller.getAsterois().add(asteroid);
+        camera.setUBO(CameraUBO.create(UBOBindingPoints.PLAYER_CAMERA));
+        camera.setDimensions(2f, 2f);
+        camera.setFarPlane(10f);
+        camera.setNearPlane(-10f);
+        camera.setPosition(0, 0, 0);
+        camera.setFront(0f, 0f, -1f);
+        
+        controller.setDebugEnabled(true);
     }
     
+    float counter = 0f;
+    
     public void loop() {
+        counter += Main.TPF;
+        if (counter > 0.5f) {
+            this.controller.spawnAsteroid();
+            counter = 0f;
+        }
+        camera.getUBO().updateUBO();
+        
         controller.loop(new Matrix4f(camera.getProjectionView()));
+        AabRender.renderQueue(camera);
         
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";
     }

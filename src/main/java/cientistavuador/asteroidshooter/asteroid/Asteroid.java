@@ -30,6 +30,7 @@ import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
+import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL33C.*;
@@ -38,9 +39,12 @@ import static org.lwjgl.opengl.GL33C.*;
  *
  * @author Cien
  */
-public class Asteroid {
+public class Asteroid implements Aab {
     
-    public static final float ASTEROID_SCALE = 0.3f;
+    public static final float ASTEROID_RENDER_SCALE = 0.15f;
+    public static final float ASTEROID_WIDTH = 0.15f;
+    public static final float ASTEROID_HEIGHT = 0.15f;
+    public static final float ASTEROID_SPEED = -0.2f;
     
     private final AsteroidController controller;
     private final Vector3f position = new Vector3f();
@@ -63,17 +67,37 @@ public class Asteroid {
     }
     
     public void loop(Matrix4f projectionView) {
+        this.position.add(0f, (float) (ASTEROID_SPEED * Main.TPF), 0f);
+        
         this.rotationZ += Main.TPF;
         if (this.rotationZ > Math.PI * 2f) {
             this.rotationZ = 0f;
         }
-        this.model.identity().translate(this.position).scale(ASTEROID_SCALE).rotateX(this.rotationX).rotateY(this.rotationY).rotateZ(this.rotationZ);
+        this.model.identity().translate(this.position).scale(ASTEROID_RENDER_SCALE).rotateX(this.rotationX).rotateY(this.rotationY).rotateZ(this.rotationZ);
         
         GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
         glDrawElements(GL_TRIANGLES, Geometries.ASTEROID_COUNT, GL_UNSIGNED_INT, 0);
         
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.ASTEROID_COUNT;
+    }
+
+    @Override
+    public void getMin(Vector3f min) {
+        min.set(
+                this.position.x() - (ASTEROID_WIDTH / 2f),
+                this.position.y() - (ASTEROID_HEIGHT / 2f),
+                this.position.z()
+        );
+    }
+    
+    @Override
+    public void getMax(Vector3f max) {
+        max.set(
+                this.position.x() + (ASTEROID_WIDTH / 2f),
+                this.position.y() + (ASTEROID_HEIGHT / 2f),
+                this.position.z()
+        );
     }
     
 }
