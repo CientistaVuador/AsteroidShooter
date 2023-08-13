@@ -33,13 +33,19 @@ package cientistavuador.asteroidshooter.texture;
 public class Textures {
     
     public static final int STONE;
+    public static final int SPACESHIP;
+    public static final int LASER;
     
     static {
         int[] textures = TexturesLoader.load(
-                "stone.png"
+                "stone.png",
+                "spaceship.png",
+                "laser.png"
         );
         
         STONE = textures[0];
+        SPACESHIP = textures[1];
+        LASER = textures[2];
     }
     
     public static void init() {

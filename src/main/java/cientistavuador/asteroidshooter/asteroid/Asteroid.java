@@ -107,10 +107,10 @@ public class Asteroid implements Aab {
         this.model.identity().translate(this.position).scale(ASTEROID_RENDER_SCALE).rotateX(this.rotationX).rotateY(this.rotationY).rotateZ(this.rotationZ);
         
         GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
-        glDrawElements(GL_TRIANGLES, Geometries.ASTEROID_COUNT, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, Geometries.ASTEROID.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
         
         Main.NUMBER_OF_DRAWCALLS++;
-        Main.NUMBER_OF_VERTICES += Geometries.ASTEROID_COUNT;
+        Main.NUMBER_OF_VERTICES += Geometries.ASTEROID.getAmountOfIndices();
     }
 
     @Override

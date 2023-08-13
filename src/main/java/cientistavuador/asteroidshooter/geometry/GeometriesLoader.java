@@ -32,7 +32,6 @@ import java.util.ArrayDeque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
@@ -42,12 +41,12 @@ public class GeometriesLoader {
 
     public static final boolean DEBUG_OUTPUT = true;
 
-    public static int[] load(String... names) {
+    public static MeshData[] load(String... names) {
         if (names.length == 0) {
             if (DEBUG_OUTPUT) {
                 System.out.println("No geometries to load.");
             }
-            return new int[0];
+            return new MeshData[0];
         }
 
         if (DEBUG_OUTPUT) {
@@ -81,43 +80,12 @@ public class GeometriesLoader {
                 throw new RuntimeException(ex);
             }
         }
-
-        int[] vaos = new int[datas.length * 2];
-
-        for (int i = 0; i < vaos.length / 2; i++) {
+        
+        for (int i = 0; i < datas.length; i++) {
             if (DEBUG_OUTPUT) {
                 System.out.println("Sending geometry '" + names[i] + "', index " + i + " to the gpu.");
             }
-            MeshData data = datas[i];
-
-            int vao = glGenVertexArrays();
-            glBindVertexArray(vao);
-
-            int ebo = glGenBuffers();
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.getIndices(), GL_STATIC_DRAW);
-
-            int vbo = glGenBuffers();
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, data.getVertices(), GL_STATIC_DRAW);
-
-            //position
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, 0);
-
-            //texture
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, (3 * Float.BYTES));
-
-            //normal
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 3, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, ((3 + 2) * Float.BYTES));
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            glBindVertexArray(0);
-            vaos[(i * 2) + 0] = vao;
-            vaos[(i * 2) + 1] = data.getIndices().length;
+            int vao = datas[i].getVAO();
             if (DEBUG_OUTPUT) {
                 System.out.println("Finished sending geometry '" + names[i] + "', index " + i + " to the gpu with object id "+vao+".");
             }
@@ -126,7 +94,7 @@ public class GeometriesLoader {
         if (DEBUG_OUTPUT) {
             System.out.println("Finished loading geometries.");
         }
-        return vaos;
+        return datas;
     }
 
     private GeometriesLoader() {

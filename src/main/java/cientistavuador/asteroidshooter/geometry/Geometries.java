@@ -26,22 +26,28 @@
  */
 package cientistavuador.asteroidshooter.geometry;
 
+import cientistavuador.asteroidshooter.resources.mesh.MeshData;
+
 /**
  *
  * @author Cien
  */
 public class Geometries {
 
-    public static final int ASTEROID;
-    public static final int ASTEROID_COUNT;
+    public static final MeshData ASTEROID;
+    public static final MeshData SPACESHIP;
+    public static final MeshData LASER;
     
     static {
-        int[] vaos = GeometriesLoader.load(
-                "asteroid.obj"
+        MeshData[] meshes = GeometriesLoader.load(
+                "asteroid.obj",
+                "spaceship.obj",
+                "laser.obj"
         );
         
-        ASTEROID = vaos[(2 * 0) + 0];
-        ASTEROID_COUNT = vaos[(2 * 0) + 1];
+        ASTEROID = meshes[0];
+        SPACESHIP = meshes[1];
+        LASER = meshes[2];
     }
     
     public static void init() {

@@ -42,9 +42,9 @@ public class AsteroidController {
 
     private final List<Asteroid> asterois = new ArrayList<>();
     private boolean debugEnabled = false;
-
+    
     public AsteroidController() {
-
+        
     }
 
     public boolean isDebugEnabled() {
@@ -66,8 +66,9 @@ public class AsteroidController {
             Vector3f finalPosition = new Vector3f()
                     .set(initialPosition)
                     .negate()
-                    .rotateZ((float) ((Math.random() - 0.5) * (Math.PI / 2.0)))
-                    .normalize(distance);
+                    .normalize()
+                    .rotateZ((float) ((Math.random() - 0.5) * Math.PI))
+                    .mul(distance);
             
             asteroid.getInitialPosition().set(initialPosition);
             asteroid.getFinalPosition().set(finalPosition);
@@ -99,7 +100,7 @@ public class AsteroidController {
     public void loop(Matrix4f projectionView) {
         List<Asteroid> copy = new ArrayList<>(this.asterois);
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
-        glBindVertexArray(Geometries.ASTEROID);
+        glBindVertexArray(Geometries.ASTEROID.getVAO());
         for (Asteroid a : copy) {
             if (a.shouldBeRemoved()) {
                 onAsteroidRemove(a);

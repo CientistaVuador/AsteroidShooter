@@ -27,6 +27,7 @@
 package cientistavuador.asteroidshooter.resources.mesh;
 
 import java.util.Arrays;
+import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
@@ -35,11 +36,12 @@ import java.util.Arrays;
 public class MeshData {
 
     public static final int SIZE = 3 + 2 + 3;
-    
+
     //position (vec3), texture/uv (vec2), normal (vec3)
     private final float[] vertices;
     private final int[] indices;
-    
+    private int vao = 0;
+
     public MeshData(float[] vertices, int[] indices) {
         this.vertices = vertices;
         this.indices = indices;
@@ -49,8 +51,63 @@ public class MeshData {
         return vertices;
     }
 
+    public int getAmountOfVerticesComponents() {
+        return vertices.length;
+    }
+    
+    public int getAmountOfVertices() {
+        return vertices.length / MeshData.SIZE;
+    }
+    
     public int[] getIndices() {
         return indices;
+    }
+
+    public int getAmountOfIndices() {
+        return indices.length;
+    }
+    
+    public boolean hasVAO() {
+        return this.vao != 0;
+    }
+
+    public int getVAO() {
+        if (this.vao == 0) {
+            this.vao = glGenVertexArrays();
+            glBindVertexArray(this.vao);
+            
+            int ebo = glGenBuffers();
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, getIndices(), GL_STATIC_DRAW);
+
+            int vbo = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, getVertices(), GL_STATIC_DRAW);
+            
+            //position
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, 0);
+
+            //texture
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, (3 * Float.BYTES));
+
+            //normal
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 3, GL_FLOAT, false, MeshData.SIZE * Float.BYTES, ((3 + 2) * Float.BYTES));
+
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glBindVertexArray(0);
+        }
+        return this.vao;
+    }
+
+    public void deleteVAO() {
+        if (this.vao != 0) {
+            glDeleteVertexArrays(this.vao);
+            this.vao = 0;
+        }
     }
 
     @Override
@@ -78,7 +135,5 @@ public class MeshData {
         }
         return Arrays.equals(this.indices, other.indices);
     }
-    
-    
-    
+
 }
