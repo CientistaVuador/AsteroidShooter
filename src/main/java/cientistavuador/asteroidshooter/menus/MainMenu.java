@@ -140,7 +140,23 @@ public class MainMenu {
         return false;
     }
     
+    public void forcePlayPressedSignal() {
+        this.playSignal = true;
+    }
+    
+    public void forceControlsPressedSignal() {
+        this.controlsSignal = true;
+    }
+    
+    public void forceExitPressedSignal() {
+        this.exitSignal = true;
+    }
+    
     public void loop(Matrix4f projectionView) {
+        if (!this.enabled) {
+            return;
+        }
+        
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.GUI.getVAO());
         
@@ -170,6 +186,10 @@ public class MainMenu {
     }
     
     public void mouseCallback(long window, int button, int action, int mods) {
+        if (!this.enabled) {
+            return;
+        }
+        
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
             Aab mouse = new Aab() {
                 private final Vector3f min = new Vector3f(Main.MOUSE_X, Main.MOUSE_Y, 0f);

@@ -42,30 +42,40 @@ import static org.lwjgl.opengl.GL33C.*;
  * @author Cien
  */
 public class Asteroid implements Aab {
-    
+
     public static final float ASTEROID_RENDER_SCALE = 0.15f;
     public static final float ASTEROID_WIDTH = 0.15f;
     public static final float ASTEROID_HEIGHT = 0.15f;
     public static final float ASTEROID_SPEED = 0.2f;
     public static final float ASTEROID_HEALTH = 100f;
-    
+
     private final AsteroidController controller;
     private final Matrix4f model = new Matrix4f();
-    
+
     private final float rotationX = (float) Math.toRadians(Math.random() * 360f);
     private final float rotationY = (float) Math.toRadians(Math.random() * 360f);
     private float rotationZ = 0f;
-    
+
     private final Vector3f initialPosition = new Vector3f();
     private final Vector3f finalPosition = new Vector3f();
     private float currentPosition = 0f;
-    
+
     private final Vector3f position = new Vector3f();
-    
+
     private float health = ASTEROID_HEALTH;
-    
+
+    private boolean frozen = false;
+
     public Asteroid(AsteroidController controller) {
         this.controller = controller;
+    }
+
+    public boolean isFrozen() {
+        return frozen;
+    }
+
+    public void setFrozen(boolean frozen) {
+        this.frozen = frozen;
     }
 
     public AsteroidController getController() {
@@ -99,32 +109,40 @@ public class Asteroid implements Aab {
     public void setHealth(float health) {
         this.health = health;
     }
-    
+
     public boolean shouldBeRemoved() {
         return this.currentPosition >= 1f || this.health <= 0f;
     }
-    
+
     public void onLaserHit(LaserShot shot) {
         this.health -= shot.getDamage();
     }
-    
+
     public void loop(Matrix4f projectionView) {
-        this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
-        
-        float x = (this.initialPosition.x() * this.currentPosition) + (this.finalPosition.x() * (1f - this.currentPosition));
-        float y = (this.initialPosition.y() * this.currentPosition) + (this.finalPosition.y() * (1f - this.currentPosition));
-        float z = (this.initialPosition.z() * this.currentPosition) + (this.finalPosition.z() * (1f - this.currentPosition));
-        this.position.set(x, y, z);
-        
-        this.rotationZ += Main.TPF;
-        if (this.rotationZ > Math.PI * 2f) {
-            this.rotationZ = 0f;
+        if (!this.frozen) {
+            this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
+
+            float x = (this.initialPosition.x() * this.currentPosition) + (this.finalPosition.x() * (1f - this.currentPosition));
+            float y = (this.initialPosition.y() * this.currentPosition) + (this.finalPosition.y() * (1f - this.currentPosition));
+            float z = (this.initialPosition.z() * this.currentPosition) + (this.finalPosition.z() * (1f - this.currentPosition));
+            this.position.set(x, y, z);
+
+            this.rotationZ += Main.TPF;
+            if (this.rotationZ > Math.PI * 2f) {
+                this.rotationZ = 0f;
+            }
+            this.model
+                    .identity()
+                    .translate(this.position)
+                    .scale(ASTEROID_RENDER_SCALE)
+                    .rotateX(this.rotationX)
+                    .rotateY(this.rotationY)
+                    .rotateZ(this.rotationZ);
         }
-        this.model.identity().translate(this.position).scale(ASTEROID_RENDER_SCALE).rotateX(this.rotationX).rotateY(this.rotationY).rotateZ(this.rotationZ);
-        
+
         GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
         glDrawElements(GL_TRIANGLES, Geometries.ASTEROID.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
+
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.ASTEROID.getAmountOfIndices();
     }
@@ -137,7 +155,7 @@ public class Asteroid implements Aab {
                 this.position.z()
         );
     }
-    
+
     @Override
     public void getMax(Vector3f max) {
         max.set(
@@ -146,5 +164,5 @@ public class Asteroid implements Aab {
                 this.position.z()
         );
     }
-    
+
 }

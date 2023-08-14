@@ -107,6 +107,10 @@ public class ControlsMenu {
         return false;
     }
     
+    public void forceBackButtonPressedSignal() {
+        this.backButtonSignal = true;
+    }
+    
     public void loop(Matrix4f projectionView) {
         if (!this.enabled) {
             return;

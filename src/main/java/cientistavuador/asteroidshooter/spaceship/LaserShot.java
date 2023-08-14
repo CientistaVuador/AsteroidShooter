@@ -55,33 +55,43 @@ public class LaserShot implements Aab {
             max.set(1f, 1f, 0f);
         }
     };
-    
+
     public static final float LASER_RENDER_SCALE = 0.025f;
     public static final float LASER_WIDTH = 0.025f;
     public static final float LASER_HEIGHT = 0.025f;
-    
+
     public static final float LASER_SPEED = 2.2f;
     public static final float LASER_DAMAGE = 50f;
-    
+
     private final Spaceship spaceship;
     private final Vector3f position = new Vector3f();
     private final Vector3f direction = new Vector3f();
-    
+
     private final Matrix4f model = new Matrix4f();
-    
+
     private boolean hitAsteroid = false;
     private float damage = LASER_DAMAGE;
-    
+
+    private boolean frozen = false;
+
     public LaserShot(Spaceship spaceship, Vector3fc position, Vector3fc direction) {
         this.spaceship = spaceship;
         this.position.set(position);
         this.direction.set(direction);
     }
 
+    public boolean isFrozen() {
+        return frozen;
+    }
+
+    public void setFrozen(boolean frozen) {
+        this.frozen = frozen;
+    }
+
     public Spaceship getSpaceship() {
         return spaceship;
     }
-    
+
     public Vector3fc getPosition() {
         return position;
     }
@@ -93,35 +103,37 @@ public class LaserShot implements Aab {
     public void setDamage(float damage) {
         this.damage = damage;
     }
-    
+
     public boolean shouldBeRemoved() {
         return !SCREEN_AAB.testAab2D(this) || this.hitAsteroid;
     }
-    
+
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
-        this.position.add((float) (this.direction.x() * Main.TPF * LASER_SPEED),
-                (float) (this.direction.y() * Main.TPF * LASER_SPEED),
-                (float) (this.direction.z() * Main.TPF * LASER_SPEED)
-        );
-        
-        this.model
-                .identity()
-                .translate(this.position)
-                .scale(LASER_RENDER_SCALE);
-        
-        GeometryProgram.sendUniforms(projectionView, this.model, Textures.LASER);
-        glDrawElements(GL_TRIANGLES, Geometries.LASER.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
-        Main.NUMBER_OF_DRAWCALLS++;
-        Main.NUMBER_OF_VERTICES += Geometries.LASER.getAmountOfIndices();
-        
-        for (Asteroid s:asteroids.getAsterois()) {
-            if (s.testAab2D(this)) {
-                this.hitAsteroid = true;
-                s.onLaserHit(this);
-                break;
+        if (!this.frozen) {
+            this.position.add((float) (this.direction.x() * Main.TPF * LASER_SPEED),
+                    (float) (this.direction.y() * Main.TPF * LASER_SPEED),
+                    (float) (this.direction.z() * Main.TPF * LASER_SPEED)
+            );
+
+            this.model
+                    .identity()
+                    .translate(this.position)
+                    .scale(LASER_RENDER_SCALE);
+
+            for (Asteroid s : asteroids.getAsterois()) {
+                if (s.testAab2D(this)) {
+                    this.hitAsteroid = true;
+                    s.onLaserHit(this);
+                    break;
+                }
             }
         }
+
+        GeometryProgram.sendUniforms(projectionView, this.model, Textures.LASER);
+        glDrawElements(GL_TRIANGLES, Geometries.LASER.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+
+        Main.NUMBER_OF_DRAWCALLS++;
+        Main.NUMBER_OF_VERTICES += Geometries.LASER.getAmountOfIndices();
     }
 
     @Override
@@ -132,7 +144,7 @@ public class LaserShot implements Aab {
                 this.position.z()
         );
     }
-    
+
     @Override
     public void getMax(Vector3f max) {
         max.set(
@@ -141,5 +153,5 @@ public class LaserShot implements Aab {
                 this.position.z()
         );
     }
-    
+
 }

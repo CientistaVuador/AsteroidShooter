@@ -111,6 +111,10 @@ public class AudioButton {
         return false;
     }
     
+    public void forceButtonPressedSignal() {
+        this.buttonSignal = true;
+    }
+    
     public void loop(Matrix4f projectionView) {
         if (!this.enabled) {
             return;

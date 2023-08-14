@@ -38,6 +38,7 @@ import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import org.joml.Matrix4f;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
@@ -51,57 +52,84 @@ public class Game {
     public static Game get() {
         return GAME;
     }
-    
+
     private final OrthoCamera camera = new OrthoCamera();
     private final AsteroidController controller = new AsteroidController();
     private final Spaceship spaceship = new Spaceship();
     private final MainMenu mainMenu = new MainMenu();
     private final AudioButton audioButton = new AudioButton();
     private final ControlsMenu controlsMenu = new ControlsMenu();
-    
+
     private Game() {
-        
+
     }
 
     public void start() {
-        camera.setUBO(CameraUBO.create(UBOBindingPoints.PLAYER_CAMERA));
-        camera.setDimensions(2f, 2f);
-        camera.setFarPlane(10f);
-        camera.setNearPlane(-10f);
-        camera.setPosition(0, 0, 0);
-        camera.setFront(0f, 0f, -1f);
-        
-        controller.setDebugEnabled(true);
-        spaceship.setDebugEnabled(true);
-        audioButton.setDebugEnabled(true);
-        mainMenu.setDebugEnabled(true);
-        controlsMenu.setDebugEnabled(true);
+        this.camera.setUBO(CameraUBO.create(UBOBindingPoints.PLAYER_CAMERA));
+        this.camera.setDimensions(2f, 2f);
+        this.camera.setFarPlane(10f);
+        this.camera.setNearPlane(-10f);
+        this.camera.setPosition(0, 0, 0);
+        this.camera.setFront(0f, 0f, -1f);
+
+        this.controller.setDebugEnabled(true);
+        this.spaceship.setDebugEnabled(true);
+        this.audioButton.setDebugEnabled(true);
+        this.mainMenu.setDebugEnabled(true);
+        this.controlsMenu.setDebugEnabled(true);
+
+        this.controlsMenu.setEnabled(false);
+
+        this.controller.setFrozen(true);
+        this.spaceship.setFrozen(true);
     }
-    
+
     float counter = 0f;
-    
+
     public void loop() {
-        counter += Main.TPF;
-        if (counter > 1f) {
-            this.controller.spawnAsteroid();
-            counter = 0f;
+        if (!this.controller.isFrozen()) {
+            this.counter += Main.TPF;
+            if (this.counter > 1f) {
+                this.controller.spawnAsteroid();
+                this.counter = 0f;
+            }
         }
-        camera.getUBO().updateUBO();
-        
+        this.camera.getUBO().updateUBO();
+
         Matrix4f cameraMatrix = new Matrix4f(camera.getProjectionView());
-        
-        controller.loop(cameraMatrix);
-        spaceship.loop(cameraMatrix, this.controller);
-        //mainMenu.loop(cameraMatrix);
-        audioButton.loop(cameraMatrix);
-        controlsMenu.loop(cameraMatrix);
-        
-        if (mainMenu.exitPressedSignal()) {
+
+        this.controller.loop(cameraMatrix);
+        this.spaceship.loop(cameraMatrix, this.controller);
+
+        //menu
+        this.mainMenu.loop(cameraMatrix);
+        this.audioButton.loop(cameraMatrix);
+        this.controlsMenu.loop(cameraMatrix);
+
+        if (this.mainMenu.playPressedSignal()) {
+            this.mainMenu.setEnabled(false);
+            this.audioButton.setEnabled(false);
+
+            this.controller.setFrozen(false);
+            this.spaceship.setFrozen(false);
+        }
+
+        if (this.mainMenu.controlsPressedSignal()) {
+            this.mainMenu.setEnabled(false);
+            this.controlsMenu.setEnabled(true);
+        }
+
+        if (this.mainMenu.exitPressedSignal()) {
             System.exit(0);
         }
-        
+
+        if (this.controlsMenu.backButtonPressedSignal()) {
+            this.mainMenu.setEnabled(true);
+            this.controlsMenu.setEnabled(false);
+        }
+
         AabRender.renderQueue(camera);
-        
+
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";
     }
 
@@ -110,16 +138,32 @@ public class Game {
     }
 
     public void windowSizeChanged(int width, int height) {
-        
+
     }
 
     public void keyCallback(long window, int key, int scancode, int action, int mods) {
-        
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+            boolean openMenu = true;
+            if (this.mainMenu.isEnabled()) {
+                this.mainMenu.forcePlayPressedSignal();
+                openMenu = false;
+            }
+            if (this.controlsMenu.isEnabled()) {
+                this.controlsMenu.forceBackButtonPressedSignal();
+                openMenu = false;
+            }
+            if (openMenu) {
+                this.mainMenu.setEnabled(true);
+                this.audioButton.setEnabled(true);
+                this.controller.setFrozen(true);
+                this.spaceship.setFrozen(true);
+            }
+        }
     }
 
     public void mouseCallback(long window, int button, int action, int mods) {
         this.audioButton.mouseCallback(window, button, action, mods);
-        //this.mainMenu.mouseCallback(window, button, action, mods);
+        this.mainMenu.mouseCallback(window, button, action, mods);
         this.controlsMenu.mouseCallback(window, button, action, mods);
     }
 }

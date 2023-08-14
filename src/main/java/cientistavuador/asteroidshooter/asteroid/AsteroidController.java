@@ -42,9 +42,18 @@ public class AsteroidController {
 
     private final List<Asteroid> asterois = new ArrayList<>();
     private boolean debugEnabled = false;
+    private boolean frozen = false;
     
     public AsteroidController() {
         
+    }
+
+    public boolean isFrozen() {
+        return frozen;
+    }
+
+    public void setFrozen(boolean frozen) {
+        this.frozen = frozen;
     }
 
     public boolean isDebugEnabled() {
@@ -102,6 +111,7 @@ public class AsteroidController {
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID.getVAO());
         for (Asteroid a : copy) {
+            a.setFrozen(this.frozen);
             if (a.shouldBeRemoved()) {
                 onAsteroidRemove(a);
                 continue;
