@@ -82,7 +82,7 @@ public class Game {
         Matrix4f cameraMatrix = new Matrix4f(camera.getProjectionView());
         
         controller.loop(cameraMatrix);
-        spaceship.loop(cameraMatrix);
+        spaceship.loop(cameraMatrix, this.controller);
         
         AabRender.renderQueue(camera);
         

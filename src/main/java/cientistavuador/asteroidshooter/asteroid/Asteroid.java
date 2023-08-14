@@ -29,6 +29,7 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
@@ -46,6 +47,7 @@ public class Asteroid implements Aab {
     public static final float ASTEROID_WIDTH = 0.15f;
     public static final float ASTEROID_HEIGHT = 0.15f;
     public static final float ASTEROID_SPEED = 0.2f;
+    public static final float ASTEROID_HEALTH = 100f;
     
     private final AsteroidController controller;
     private final Matrix4f model = new Matrix4f();
@@ -59,6 +61,8 @@ public class Asteroid implements Aab {
     private float currentPosition = 0f;
     
     private final Vector3f position = new Vector3f();
+    
+    private float health = ASTEROID_HEALTH;
     
     public Asteroid(AsteroidController controller) {
         this.controller = controller;
@@ -87,9 +91,21 @@ public class Asteroid implements Aab {
     public Vector3fc getPosition() {
         return position;
     }
+
+    public float getHealth() {
+        return health;
+    }
+
+    public void setHealth(float health) {
+        this.health = health;
+    }
     
     public boolean shouldBeRemoved() {
-        return this.currentPosition >= 1f;
+        return this.currentPosition >= 1f || this.health <= 0f;
+    }
+    
+    public void onLaserHit(LaserShot shot) {
+        this.health -= shot.getDamage();
     }
     
     public void loop(Matrix4f projectionView) {

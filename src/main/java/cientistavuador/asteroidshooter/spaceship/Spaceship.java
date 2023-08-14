@@ -27,6 +27,7 @@
 package cientistavuador.asteroidshooter.spaceship;
 
 import cientistavuador.asteroidshooter.Main;
+import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
@@ -49,7 +50,7 @@ public class Spaceship implements Aab {
     public static final float SPACESHIP_WIDTH = 0.14f;
     public static final float SPACESHIP_HEIGHT = 0.14f;
     
-    public static final float SPACESHIP_SHOT_DELAY = 0.12f;
+    public static final float SPACESHIP_SHOT_DELAY = 0.4f;
     
     public static final float SPEED = 0.8f;
     
@@ -92,7 +93,7 @@ public class Spaceship implements Aab {
         return laserShots;
     }
     
-    public void loop(Matrix4f projectionView) {
+    public void loop(Matrix4f projectionView, AsteroidController asteroids) {
         if (this.nextShot > 0f) {
             this.nextShot -= Main.TPF;
         }
@@ -141,7 +142,7 @@ public class Spaceship implements Aab {
                 this.laserShots.remove(s);
                 continue;
             }
-            s.loop(projectionView);
+            s.loop(projectionView, asteroids);
             if (this.debugEnabled) {
                 s.queueAabRender();
             }

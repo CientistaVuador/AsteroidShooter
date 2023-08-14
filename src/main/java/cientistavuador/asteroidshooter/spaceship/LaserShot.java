@@ -27,6 +27,8 @@
 package cientistavuador.asteroidshooter.spaceship;
 
 import cientistavuador.asteroidshooter.Main;
+import cientistavuador.asteroidshooter.asteroid.Asteroid;
+import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
@@ -58,13 +60,17 @@ public class LaserShot implements Aab {
     public static final float LASER_WIDTH = 0.025f;
     public static final float LASER_HEIGHT = 0.025f;
     
-    public static final float SPEED = 2.0f;
+    public static final float LASER_SPEED = 2.2f;
+    public static final float LASER_DAMAGE = 50f;
     
     private final Spaceship spaceship;
     private final Vector3f position = new Vector3f();
     private final Vector3f direction = new Vector3f();
     
     private final Matrix4f model = new Matrix4f();
+    
+    private boolean hitAsteroid = false;
+    private float damage = LASER_DAMAGE;
     
     public LaserShot(Spaceship spaceship, Vector3fc position, Vector3fc direction) {
         this.spaceship = spaceship;
@@ -79,16 +85,23 @@ public class LaserShot implements Aab {
     public Vector3fc getPosition() {
         return position;
     }
-    
-    public boolean shouldBeRemoved() {
-        return !SCREEN_AAB.testAab(this);
+
+    public float getDamage() {
+        return damage;
+    }
+
+    public void setDamage(float damage) {
+        this.damage = damage;
     }
     
-    public void loop(Matrix4f projectionView) {
-        this.position.add(
-                (float) (this.direction.x() * Main.TPF * SPEED),
-                (float) (this.direction.y() * Main.TPF * SPEED),
-                (float) (this.direction.z() * Main.TPF * SPEED)
+    public boolean shouldBeRemoved() {
+        return !SCREEN_AAB.testAab(this) || this.hitAsteroid;
+    }
+    
+    public void loop(Matrix4f projectionView, AsteroidController asteroids) {
+        this.position.add((float) (this.direction.x() * Main.TPF * LASER_SPEED),
+                (float) (this.direction.y() * Main.TPF * LASER_SPEED),
+                (float) (this.direction.z() * Main.TPF * LASER_SPEED)
         );
         
         this.model
@@ -101,6 +114,14 @@ public class LaserShot implements Aab {
         
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.LASER.getAmountOfIndices();
+        
+        for (Asteroid s:asteroids.getAsterois()) {
+            if (s.testAab(this)) {
+                this.hitAsteroid = true;
+                s.onLaserHit(this);
+                break;
+            }
+        }
     }
 
     @Override
