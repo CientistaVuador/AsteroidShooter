@@ -95,7 +95,7 @@ public class LaserShot implements Aab {
     }
     
     public boolean shouldBeRemoved() {
-        return !SCREEN_AAB.testAab(this) || this.hitAsteroid;
+        return !SCREEN_AAB.testAab2D(this) || this.hitAsteroid;
     }
     
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
@@ -116,7 +116,7 @@ public class LaserShot implements Aab {
         Main.NUMBER_OF_VERTICES += Geometries.LASER.getAmountOfIndices();
         
         for (Asteroid s:asteroids.getAsterois()) {
-            if (s.testAab(this)) {
+            if (s.testAab2D(this)) {
                 this.hitAsteroid = true;
                 s.onLaserHit(this);
                 break;

@@ -35,17 +35,32 @@ public class Textures {
     public static final int STONE;
     public static final int SPACESHIP;
     public static final int LASER;
+    public static final int AUDIO_OFF;
+    public static final int AUDIO_ON;
+    public static final int BUTTON;
+    public static final int CONTROLS;
+    public static final int TITLE;
     
     static {
         int[] textures = TexturesLoader.load(
                 "stone.png",
                 "spaceship.png",
-                "laser.png"
+                "laser.png",
+                "audio_off.png",
+                "audio_on.png",
+                "button.png",
+                "controls.png",
+                "title.png"
         );
         
         STONE = textures[0];
         SPACESHIP = textures[1];
         LASER = textures[2];
+        AUDIO_OFF = textures[3];
+        AUDIO_ON = textures[4];
+        BUTTON = textures[5];
+        CONTROLS = textures[6];
+        TITLE = textures[7];
     }
     
     public static void init() {

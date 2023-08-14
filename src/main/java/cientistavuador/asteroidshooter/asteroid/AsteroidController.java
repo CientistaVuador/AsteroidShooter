@@ -75,7 +75,7 @@ public class AsteroidController {
             
             boolean collision = false;
             for (Asteroid other : this.asterois) {
-                if (asteroid.testAab(other)) {
+                if (asteroid.testAab2D(other)) {
                     collision = true;
                     break;
                 }

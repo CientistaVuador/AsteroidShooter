@@ -31,6 +31,7 @@ import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import java.io.PrintStream;
+import java.nio.DoubleBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.joml.Vector3f;
 import static org.lwjgl.glfw.GLFW.*;
@@ -39,6 +40,7 @@ import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL33C.*;
 import org.lwjgl.opengl.GLDebugMessageCallback;
 import static org.lwjgl.opengl.KHRDebug.*;
+import org.lwjgl.system.MemoryStack;
 import static org.lwjgl.system.MemoryUtil.*;
 
 /**
@@ -106,6 +108,8 @@ public class Main {
     public static double ONE_MINUTE_COUNTER = 0.0;
     public static int NUMBER_OF_DRAWCALLS = 0;
     public static int NUMBER_OF_VERTICES = 0;
+    public static float MOUSE_X = 0f;
+    public static float MOUSE_Y = 0f;
     public static final ConcurrentLinkedQueue<Runnable> MAIN_TASKS = new ConcurrentLinkedQueue<>();
     public static final Vector3f DEFAULT_CLEAR_COLOR = new Vector3f(0.2f, 0.4f, 0.6f);
     private static GLDebugMessageCallback DEBUG_CALLBACK = null;
@@ -315,7 +319,23 @@ public class Main {
                     System.out.println("[Spike Lag Warning] From " + Main.FPS + " FPS to " + tpfFps + " FPS; current frame TPF: " + String.format("%.3f", Main.TPF) + "s");
                 }
             }
-
+            
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                DoubleBuffer mouseX = stack.mallocDouble(1);
+                DoubleBuffer mouseY = stack.mallocDouble(1);
+                glfwGetCursorPos(Main.WINDOW_POINTER, mouseX, mouseY);
+                double mX = mouseX.get();
+                double mY = mouseY.get();
+                mY = Main.HEIGHT - mY;
+                mX /= Main.WIDTH;
+                mY /= Main.HEIGHT;
+                mX = (mX * 2.0) - 1.0;
+                mY = (mY * 2.0) - 1.0;
+                
+                Main.MOUSE_X = (float) mX;
+                Main.MOUSE_Y = (float) mY;
+            }
+            
             glfwPollEvents();
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 

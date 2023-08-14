@@ -37,17 +37,20 @@ public class Geometries {
     public static final MeshData ASTEROID;
     public static final MeshData SPACESHIP;
     public static final MeshData LASER;
+    public static final MeshData GUI;
     
     static {
         MeshData[] meshes = GeometriesLoader.load(
                 "asteroid.obj",
                 "spaceship.obj",
-                "laser.obj"
+                "laser.obj",
+                "gui.obj"
         );
         
         ASTEROID = meshes[0];
         SPACESHIP = meshes[1];
         LASER = meshes[2];
+        GUI = meshes[3];
     }
     
     public static void init() {

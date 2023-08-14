@@ -35,7 +35,7 @@ import org.joml.Vector3f;
  * @author Cien
  */
 public interface Aab { 
-    public default boolean testAab(Aab other) {
+    public default boolean testAab3D(Aab other) {
         Vector3f thisMin = new Vector3f();
         Vector3f thisMax = new Vector3f();
         getMin(thisMin);
@@ -45,6 +45,23 @@ public interface Aab {
         Vector3f otherMax = new Vector3f();
         other.getMin(otherMin);
         other.getMax(otherMax);
+        
+        return Intersectionf.testAabAab(thisMin, thisMax, otherMin, otherMax);
+    }
+    public default boolean testAab2D(Aab other) {
+        Vector3f thisMin = new Vector3f();
+        Vector3f thisMax = new Vector3f();
+        getMin(thisMin);
+        getMax(thisMax);
+        thisMin.setComponent(2, 0f);
+        thisMax.setComponent(2, 0f);
+        
+        Vector3f otherMin = new Vector3f();
+        Vector3f otherMax = new Vector3f();
+        other.getMin(otherMin);
+        other.getMax(otherMax);
+        otherMin.setComponent(2, 0f);
+        otherMax.setComponent(2, 0f);
         
         return Intersectionf.testAabAab(thisMin, thisMax, otherMin, otherMax);
     }

@@ -31,6 +31,9 @@ import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.camera.OrthoCamera;
 import cientistavuador.asteroidshooter.camera.PerspectiveCamera;
 import cientistavuador.asteroidshooter.debug.AabRender;
+import cientistavuador.asteroidshooter.menus.AudioButton;
+import cientistavuador.asteroidshooter.menus.ControlsMenu;
+import cientistavuador.asteroidshooter.menus.MainMenu;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
@@ -52,9 +55,12 @@ public class Game {
     private final OrthoCamera camera = new OrthoCamera();
     private final AsteroidController controller = new AsteroidController();
     private final Spaceship spaceship = new Spaceship();
+    private final MainMenu mainMenu = new MainMenu();
+    private final AudioButton audioButton = new AudioButton();
+    private final ControlsMenu controlsMenu = new ControlsMenu();
     
     private Game() {
-
+        
     }
 
     public void start() {
@@ -67,6 +73,9 @@ public class Game {
         
         controller.setDebugEnabled(true);
         spaceship.setDebugEnabled(true);
+        audioButton.setDebugEnabled(true);
+        mainMenu.setDebugEnabled(true);
+        controlsMenu.setDebugEnabled(true);
     }
     
     float counter = 0f;
@@ -83,6 +92,13 @@ public class Game {
         
         controller.loop(cameraMatrix);
         spaceship.loop(cameraMatrix, this.controller);
+        //mainMenu.loop(cameraMatrix);
+        audioButton.loop(cameraMatrix);
+        controlsMenu.loop(cameraMatrix);
+        
+        if (mainMenu.exitPressedSignal()) {
+            System.exit(0);
+        }
         
         AabRender.renderQueue(camera);
         
@@ -102,6 +118,8 @@ public class Game {
     }
 
     public void mouseCallback(long window, int button, int action, int mods) {
-        
+        this.audioButton.mouseCallback(window, button, action, mods);
+        //this.mainMenu.mouseCallback(window, button, action, mods);
+        this.controlsMenu.mouseCallback(window, button, action, mods);
     }
 }
