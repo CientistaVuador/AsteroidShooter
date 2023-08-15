@@ -27,6 +27,7 @@
 package cientistavuador.asteroidshooter.spaceship;
 
 import cientistavuador.asteroidshooter.Main;
+import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
@@ -46,6 +47,18 @@ import static org.lwjgl.opengl.GL33C.*;
  */
 public class Spaceship implements Aab {
 
+    public static final Aab SCREEN_AAB = new Aab() {
+        @Override
+        public void getMin(Vector3f min) {
+            min.set(-1f, -1f, 0f);
+        }
+
+        @Override
+        public void getMax(Vector3f max) {
+            max.set(1f, 1f, 0f);
+        }
+    };
+    
     public static final float SPACESHIP_RENDER_SCALE = 0.2f;
     public static final float SPACESHIP_WIDTH = 0.14f;
     public static final float SPACESHIP_HEIGHT = 0.14f;
@@ -70,6 +83,8 @@ public class Spaceship implements Aab {
     private float nextShot = 0f;
 
     private boolean frozen = false;
+    
+    private boolean dead = false;
 
     public Spaceship() {
 
@@ -83,6 +98,10 @@ public class Spaceship implements Aab {
         this.frozen = frozen;
     }
 
+    public boolean isDead() {
+        return dead;
+    }
+    
     public boolean isDebugEnabled() {
         return debugEnabled;
     }
@@ -109,17 +128,30 @@ public class Spaceship implements Aab {
                 this.nextShot -= Main.TPF;
             }
 
+            float value = (float) (Main.TPF * SPEED);
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_W) == GLFW_PRESS) {
-                this.position.add(0, (float) (Main.TPF * SPEED), 0);
+                this.position.add(0, value, 0);
+                if (!this.testAab2D(SCREEN_AAB)) {
+                    this.position.add(0, -value, 0);
+                }
             }
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_A) == GLFW_PRESS) {
-                this.position.add((float) (Main.TPF * -SPEED), 0, 0);
+                this.position.add(-value, 0, 0);
+                if (!this.testAab2D(SCREEN_AAB)) {
+                    this.position.add(value, 0, 0);
+                }
             }
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_S) == GLFW_PRESS) {
-                this.position.add(0, (float) (Main.TPF * -SPEED), 0);
+                this.position.add(0, -value, 0);
+                if (!this.testAab2D(SCREEN_AAB)) {
+                    this.position.add(0, value, 0);
+                }
             }
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_D) == GLFW_PRESS) {
-                this.position.add((float) (Main.TPF * SPEED), 0, 0);
+                this.position.add(value, 0, 0);
+                if (!this.testAab2D(SCREEN_AAB)) {
+                    this.position.add(-value, 0, 0);
+                }
             }
 
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_SPACE) == GLFW_PRESS && this.nextShot <= 0f) {
@@ -144,6 +176,13 @@ public class Spaceship implements Aab {
                     .translate(this.position)
                     .scale(SPACESHIP_RENDER_SCALE)
                     .rotateZ(this.rotation);
+            
+            for (Asteroid s:asteroids.getAsterois()) {
+                if (s.testAab2D(this)) {
+                    this.dead = true;
+                    break;
+                }
+            }
         }
 
         List<LaserShot> copy = new ArrayList<>(this.laserShots);

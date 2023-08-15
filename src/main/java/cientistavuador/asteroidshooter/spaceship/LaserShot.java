@@ -44,23 +44,11 @@ import static org.lwjgl.opengl.GL33C.*;
  */
 public class LaserShot implements Aab {
 
-    public static final Aab SCREEN_AAB = new Aab() {
-        @Override
-        public void getMin(Vector3f min) {
-            min.set(-1f, -1f, 0f);
-        }
-
-        @Override
-        public void getMax(Vector3f max) {
-            max.set(1f, 1f, 0f);
-        }
-    };
-
     public static final float LASER_RENDER_SCALE = 0.025f;
     public static final float LASER_WIDTH = 0.025f;
     public static final float LASER_HEIGHT = 0.025f;
 
-    public static final float LASER_SPEED = 2.2f;
+    public static final float LASER_SPEED = 2.5f;
     public static final float LASER_DAMAGE = 50f;
 
     private final Spaceship spaceship;
@@ -105,7 +93,7 @@ public class LaserShot implements Aab {
     }
 
     public boolean shouldBeRemoved() {
-        return !SCREEN_AAB.testAab2D(this) || this.hitAsteroid;
+        return !Spaceship.SCREEN_AAB.testAab2D(this) || this.hitAsteroid;
     }
 
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
