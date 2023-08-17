@@ -66,7 +66,7 @@ public class Asteroid implements Aab {
 
     private boolean frozen = false;
 
-    public Asteroid(AsteroidController controller) {
+    protected Asteroid(AsteroidController controller) {
         this.controller = controller;
     }
 
@@ -74,7 +74,7 @@ public class Asteroid implements Aab {
         return frozen;
     }
 
-    public void setFrozen(boolean frozen) {
+    protected void setFrozen(boolean frozen) {
         this.frozen = frozen;
     }
 

@@ -37,6 +37,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import static org.lwjgl.opengl.GL33C.*;
+import static org.lwjgl.openal.AL11.*;
 
 /**
  *
@@ -59,10 +60,9 @@ public class LaserShot implements Aab {
 
     private boolean hitAsteroid = false;
     private float damage = LASER_DAMAGE;
-
     private boolean frozen = false;
-
-    public LaserShot(Spaceship spaceship, Vector3fc position, Vector3fc direction) {
+    
+    protected LaserShot(Spaceship spaceship, Vector3fc position, Vector3fc direction) {
         this.spaceship = spaceship;
         this.position.set(position);
         this.direction.set(direction);
@@ -72,7 +72,7 @@ public class LaserShot implements Aab {
         return frozen;
     }
 
-    public void setFrozen(boolean frozen) {
+    protected void setFrozen(boolean frozen) {
         this.frozen = frozen;
     }
 
@@ -102,7 +102,7 @@ public class LaserShot implements Aab {
                     (float) (this.direction.y() * Main.TPF * LASER_SPEED),
                     (float) (this.direction.z() * Main.TPF * LASER_SPEED)
             );
-
+            
             this.model
                     .identity()
                     .translate(this.position)

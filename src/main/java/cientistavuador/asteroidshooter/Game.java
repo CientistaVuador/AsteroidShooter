@@ -37,9 +37,12 @@ import cientistavuador.asteroidshooter.menus.MainMenu;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
+import java.nio.FloatBuffer;
 import org.joml.Matrix4f;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.openal.AL11.*;
 import static org.lwjgl.opengl.GL33C.*;
+import org.lwjgl.system.MemoryStack;
 
 /**
  *
@@ -83,6 +86,16 @@ public class Game {
     float counter = 0f;
 
     public void loop() {
+        alListener3f(AL_POSITION, (float) this.camera.getPosition().x(), (float) this.camera.getPosition().y(), (float) this.camera.getPosition().z());
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.callocFloat(6);
+            this.camera.getFront().get(buffer);
+            buffer.position(3);
+            this.camera.getUp().get(buffer);
+            buffer.position(0);
+            alListenerfv(AL_ORIENTATION, buffer);
+        }
+        
         this.camera.getUBO().updateUBO();
 
         Matrix4f cameraMatrix = new Matrix4f(camera.getProjectionView());
@@ -112,7 +125,7 @@ public class Game {
         this.mainMenu.loop(cameraMatrix);
         this.audioButton.loop(cameraMatrix);
         this.controlsMenu.loop(cameraMatrix);
-
+        
         if (this.mainMenu.playPressedSignal()) {
             if (this.spaceship == null) {
                 this.spaceship = new Spaceship();
@@ -120,6 +133,8 @@ public class Game {
                 
                 this.spaceship.setDebugEnabled(true);
                 this.controller.setDebugEnabled(true);
+                
+                this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
 
             this.mainMenu.setEnabled(false);
@@ -142,7 +157,13 @@ public class Game {
             this.mainMenu.setEnabled(true);
             this.controlsMenu.setEnabled(false);
         }
-
+        
+        if (this.audioButton.buttonPressedSignal()) {
+            if (this.spaceship != null) {
+                this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
+            }
+        }
+        
         AabRender.renderQueue(camera);
 
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";

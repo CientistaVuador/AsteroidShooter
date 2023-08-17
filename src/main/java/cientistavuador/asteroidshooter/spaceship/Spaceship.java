@@ -75,19 +75,24 @@ public class Spaceship implements Aab {
 
     private float cursorX = 0f;
     private float cursorY = 0f;
-
-    private float rotation = 0f;
-
-    private boolean debugEnabled = false;
-
-    private float nextShot = 0f;
-
-    private boolean frozen = false;
     
+    private float rotation = 0f;
+    private boolean debugEnabled = false;
+    private float nextShot = 0f;
+    private boolean frozen = false;
     private boolean dead = false;
-
+    private boolean audioEnabled = true;
+    
     public Spaceship() {
 
+    }
+
+    public boolean isAudioEnabled() {
+        return audioEnabled;
+    }
+
+    public void setAudioEnabled(boolean audioEnabled) {
+        this.audioEnabled = audioEnabled;
     }
 
     public boolean isFrozen() {
@@ -96,6 +101,9 @@ public class Spaceship implements Aab {
 
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
+        for (LaserShot s:this.laserShots) {
+            s.setFrozen(frozen);
+        }
     }
 
     public boolean isDead() {
@@ -153,12 +161,14 @@ public class Spaceship implements Aab {
                     this.position.add(-value, 0, 0);
                 }
             }
-
+            
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_SPACE) == GLFW_PRESS && this.nextShot <= 0f) {
                 this.nextShot = SPACESHIP_SHOT_DELAY;
-                this.laserShots.add(new LaserShot(this, this.position, this.direction));
+                LaserShot shot = new LaserShot(this, this.position, this.direction);
+                shot.setFrozen(this.frozen);
+                this.laserShots.add(shot);
             }
-
+            
             float cursorXPos = this.cursorX / Main.WIDTH;
             float cursorYPos = this.cursorY / Main.HEIGHT;
             cursorYPos = 1f - cursorYPos;
@@ -189,7 +199,6 @@ public class Spaceship implements Aab {
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.LASER.getVAO());
         for (LaserShot s : copy) {
-            s.setFrozen(this.frozen);
             if (s.shouldBeRemoved()) {
                 this.laserShots.remove(s);
                 continue;

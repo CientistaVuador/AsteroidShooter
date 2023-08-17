@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.resources.audio;
 
 import java.nio.ShortBuffer;
 import org.lwjgl.system.MemoryUtil;
+import static org.lwjgl.openal.AL11.*;
 
 /**
  * must be manually freed
@@ -35,11 +36,13 @@ import org.lwjgl.system.MemoryUtil;
  */
 public class NativeAudio {
     
-    private boolean freed = false;
     private final ShortBuffer data;
     private final int channels;
     private final int sampleRate;
     private final float duration;
+    
+    private boolean freed = false;
+    private int audioBuffer = 0;
     
     protected NativeAudio(ShortBuffer data, int channels, int sampleRate) {
         this.data = data;
@@ -64,6 +67,33 @@ public class NativeAudio {
     public float getDuration() {
         return duration;
     }
+    
+    public boolean hasAudioBuffer() {
+        if (this.freed) {
+            return false;
+        }
+        return this.audioBuffer != 0;
+    }
+    
+    public int getAudioBuffer() {
+        throwExceptionIfFreed();
+        if (this.audioBuffer == 0) {
+            this.audioBuffer = alGenBuffers();
+            if (this.channels == 1) {
+                alBufferData(this.audioBuffer, AL_FORMAT_MONO16, this.data, this.sampleRate);
+            } else {
+                alBufferData(this.audioBuffer, AL_FORMAT_STEREO16, this.data, this.sampleRate);
+            }
+        }
+        return this.audioBuffer;
+    }
+    
+    public void deleteAudioBuffer() {
+        if (this.audioBuffer != 0) {
+            alDeleteBuffers(this.audioBuffer);
+            this.audioBuffer = 0;
+        }
+    }
 
     private void throwExceptionIfFreed() {
         if (this.freed) {
@@ -73,6 +103,7 @@ public class NativeAudio {
     
     public void free() {
         throwExceptionIfFreed();
+        deleteAudioBuffer();
         MemoryUtil.memFree(this.data);
         this.freed = true;
     }

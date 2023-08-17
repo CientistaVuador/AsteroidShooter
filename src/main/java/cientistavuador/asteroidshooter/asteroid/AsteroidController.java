@@ -54,6 +54,9 @@ public class AsteroidController {
 
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
+        for (Asteroid s:this.asterois) {
+            s.setFrozen(frozen);
+        }
     }
 
     public boolean isDebugEnabled() {
@@ -94,6 +97,7 @@ public class AsteroidController {
             }
         }
 
+        asteroid.setFrozen(this.frozen);
         this.asterois.add(asteroid);
         return asteroid;
     }
@@ -111,7 +115,6 @@ public class AsteroidController {
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID.getVAO());
         for (Asteroid a : copy) {
-            a.setFrozen(this.frozen);
             if (a.shouldBeRemoved()) {
                 onAsteroidRemove(a);
                 continue;

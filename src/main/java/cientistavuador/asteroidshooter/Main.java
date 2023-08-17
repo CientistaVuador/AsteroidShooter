@@ -26,7 +26,9 @@
  */
 package cientistavuador.asteroidshooter;
 
+import cientistavuador.asteroidshooter.sound.SoundSystem;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
@@ -270,6 +272,8 @@ public class Main {
         GLFonts.init(); //static initialize
         Geometries.init(); //static initialize
         Textures.init(); //static initialize
+        SoundSystem.init(); //static initialize
+        Sounds.init(); //static initialize
         Game.get(); //static initialize
 
         Main.checkGLError();
