@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.asteroid;
 
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
@@ -110,7 +111,7 @@ public class AsteroidController {
         return asterois;
     }
 
-    public void loop(Matrix4f projectionView) {
+    public void loop(Matrix4f projectionView, Spaceship ship) {
         List<Asteroid> copy = new ArrayList<>(this.asterois);
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID.getVAO());
@@ -119,7 +120,7 @@ public class AsteroidController {
                 onAsteroidRemove(a);
                 continue;
             }
-            a.loop(projectionView);
+            a.loop(projectionView, ship);
             if (isDebugEnabled()) {
                 a.queueAabRender();
             }

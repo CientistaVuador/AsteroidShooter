@@ -35,13 +35,16 @@ import cientistavuador.asteroidshooter.resources.audio.NativeAudio;
 public class Sounds {
     
     public static final NativeAudio LASER;
+    public static final NativeAudio CLICK;
     
     static {
         NativeAudio[] sounds = SoundLoader.load(new String[] {
-            "laser.ogg"
+            "laser.ogg",
+            "click.ogg"
         });
         
         LASER = sounds[0];
+        CLICK = sounds[1];
     }
     
     public static void init() {

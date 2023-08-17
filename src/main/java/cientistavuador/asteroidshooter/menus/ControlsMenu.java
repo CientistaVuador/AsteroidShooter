@@ -42,12 +42,12 @@ import static org.lwjgl.opengl.GL33C.*;
  */
 public class ControlsMenu {
     private static final Matrix4f controlsModel = new Matrix4f()
-            .translate(0f, 0.2f, 2f)
+            .translate(0f, -0.15f, 2f)
             .scale(1f, 1.5f, 1f)
             ;
     
     private static final Matrix4f backModel = new Matrix4f()
-            .translate(0f, -0.75f, 2f)
+            .translate(0f, 0.80f, 2f)
             .scale(0.60f, 0.30f, 1f)
             ;
     

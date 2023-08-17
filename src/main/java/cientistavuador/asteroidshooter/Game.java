@@ -34,6 +34,7 @@ import cientistavuador.asteroidshooter.debug.AabRender;
 import cientistavuador.asteroidshooter.menus.AudioButton;
 import cientistavuador.asteroidshooter.menus.ControlsMenu;
 import cientistavuador.asteroidshooter.menus.MainMenu;
+import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
@@ -61,11 +62,14 @@ public class Game {
     private final AudioButton audioButton = new AudioButton();
     private final ControlsMenu controlsMenu = new ControlsMenu();
 
+    private final int clickAudioSource;
+    
     private AsteroidController controller = null;
     private Spaceship spaceship = null;
-
+    
     private Game() {
-
+        this.clickAudioSource = alGenSources();
+        alSourcei(this.clickAudioSource, AL_BUFFER, Sounds.CLICK.getAudioBuffer());
     }
 
     public void start() {
@@ -109,7 +113,7 @@ public class Game {
                 }
             }
 
-            this.controller.loop(cameraMatrix);
+            this.controller.loop(cameraMatrix, this.spaceship);
             this.spaceship.loop(cameraMatrix, this.controller);
             
             if (this.spaceship.isDead()) {
@@ -125,6 +129,8 @@ public class Game {
         this.mainMenu.loop(cameraMatrix);
         this.audioButton.loop(cameraMatrix);
         this.controlsMenu.loop(cameraMatrix);
+        
+        boolean buttonPressed = false;
         
         if (this.mainMenu.playPressedSignal()) {
             if (this.spaceship == null) {
@@ -142,11 +148,15 @@ public class Game {
 
             this.controller.setFrozen(false);
             this.spaceship.setFrozen(false);
+            
+            buttonPressed = true;
         }
 
         if (this.mainMenu.controlsPressedSignal()) {
             this.mainMenu.setEnabled(false);
             this.controlsMenu.setEnabled(true);
+            
+            buttonPressed = true;
         }
 
         if (this.mainMenu.exitPressedSignal()) {
@@ -156,12 +166,23 @@ public class Game {
         if (this.controlsMenu.backButtonPressedSignal()) {
             this.mainMenu.setEnabled(true);
             this.controlsMenu.setEnabled(false);
+            
+            buttonPressed = true;
         }
         
         if (this.audioButton.buttonPressedSignal()) {
             if (this.spaceship != null) {
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
+            
+            buttonPressed = true;
+        }
+        
+        if (buttonPressed && this.audioButton.isAudioEnabled()) {
+            if (alGetSourcei(this.clickAudioSource, AL_SOURCE_STATE) == AL_PLAYING) {
+                alSourceStop(this.clickAudioSource);
+            }
+            alSourcePlay(this.clickAudioSource);
         }
         
         AabRender.renderQueue(camera);

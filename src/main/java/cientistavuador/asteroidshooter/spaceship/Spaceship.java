@@ -93,6 +93,9 @@ public class Spaceship implements Aab {
 
     public void setAudioEnabled(boolean audioEnabled) {
         this.audioEnabled = audioEnabled;
+        for (LaserShot s:this.laserShots) {
+            s.setAudioEnabled(audioEnabled);
+        }
     }
 
     public boolean isFrozen() {
@@ -129,6 +132,13 @@ public class Spaceship implements Aab {
     public List<LaserShot> getLaserShots() {
         return laserShots;
     }
+    
+    public void onAsteroidHit(Asteroid s) {
+        this.dead = true;
+        for (LaserShot e:this.laserShots) {
+            e.cleanup();
+        }
+    }
 
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
         if (!this.frozen) {
@@ -162,13 +172,6 @@ public class Spaceship implements Aab {
                 }
             }
             
-            if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_SPACE) == GLFW_PRESS && this.nextShot <= 0f) {
-                this.nextShot = SPACESHIP_SHOT_DELAY;
-                LaserShot shot = new LaserShot(this, this.position, this.direction);
-                shot.setFrozen(this.frozen);
-                this.laserShots.add(shot);
-            }
-            
             float cursorXPos = this.cursorX / Main.WIDTH;
             float cursorYPos = this.cursorY / Main.HEIGHT;
             cursorYPos = 1f - cursorYPos;
@@ -185,13 +188,13 @@ public class Spaceship implements Aab {
                     .identity()
                     .translate(this.position)
                     .scale(SPACESHIP_RENDER_SCALE)
-                    .rotateZ(this.rotation);
+                    .rotateZ(this.rotation); 
             
-            for (Asteroid s:asteroids.getAsterois()) {
-                if (s.testAab2D(this)) {
-                    this.dead = true;
-                    break;
-                }
+            if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_SPACE) == GLFW_PRESS && this.nextShot <= 0f && !this.dead) {
+                this.nextShot = SPACESHIP_SHOT_DELAY;
+                LaserShot shot = new LaserShot(this, this.position, this.direction, this.audioEnabled);
+                shot.setFrozen(this.frozen);
+                this.laserShots.add(shot);
             }
         }
 

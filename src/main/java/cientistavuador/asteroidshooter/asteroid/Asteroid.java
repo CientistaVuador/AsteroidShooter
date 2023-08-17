@@ -30,6 +30,7 @@ import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.spaceship.LaserShot;
+import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
@@ -118,7 +119,7 @@ public class Asteroid implements Aab {
         this.health -= shot.getDamage();
     }
 
-    public void loop(Matrix4f projectionView) {
+    public void loop(Matrix4f projectionView, Spaceship ship) {
         if (!this.frozen) {
             this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
 
@@ -138,6 +139,11 @@ public class Asteroid implements Aab {
                     .rotateX(this.rotationX)
                     .rotateY(this.rotationY)
                     .rotateZ(this.rotationZ);
+            
+            if (ship.testAab2D(this)) {
+                ship.onAsteroidHit(this);
+                this.health = 0f;
+            }
         }
 
         GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
