@@ -76,7 +76,6 @@ public class LaserShot implements Aab {
             alSourcei(this.laserShotAudioSource, AL_BUFFER, Sounds.LASER.getAudioBuffer());
             alSource3f(this.laserShotAudioSource, AL_POSITION, this.position.x(), this.position.y(), this.position.z());
             alSourcePlay(this.laserShotAudioSource);
-            System.out.println(this.laserShotAudioSource);
         } else {
             this.laserShotAudioSource = 0;
         }

@@ -32,6 +32,7 @@ import cientistavuador.asteroidshooter.resources.font.FontCharacter;
 import cientistavuador.asteroidshooter.ubo.FontTextUBO;
 import cientistavuador.asteroidshooter.util.ProgramCompiler;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
@@ -41,8 +42,7 @@ import static org.lwjgl.opengl.GL33C.*;
 public class GLFontRenderer {
 
     private static final String VERTEX_SHADER
-            = 
-            """
+            = """
             #version 330 core
             
             uniform sampler2D atlasBounds;
@@ -83,8 +83,7 @@ public class GLFontRenderer {
             """;
 
     private static final String FRAGMENT_SHADER
-            = 
-            """
+            = """
             #version 330 core
             
             uniform sampler2D atlas;
@@ -154,6 +153,48 @@ public class GLFontRenderer {
         glBindVertexArray(0);
     }
 
+    public static float lineSize(GLFontSpecification spec, String text) {
+        GLFont font = spec.getFont();
+        Font rawFont = font.getFont();
+
+        float fontSize = spec.getSize();
+        float spaceAdvance = font.getAdvance(font.getIndexOfUnicode(' '));
+
+        float size = 0f;
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
+            int unicode = text.codePointAt(i);
+            int unicodeIndex = font.getIndexOfUnicode(unicode);
+            FontCharacter rawCharacter = rawFont.getCharacter(unicodeIndex);
+            float advance = rawCharacter.getAdvance();
+
+            boolean skipPush = false;
+            
+            switch (unicode) {
+                case '\r' -> {
+                    skipPush = true;
+                }
+                case '\n' -> {
+                    skipPush = true;
+                }
+                case ' ' -> {
+                    size += (fontSize * spaceAdvance);
+                    skipPush = true;
+                }
+                case '\t' -> {
+                    size += (fontSize * spaceAdvance * 4);
+                    skipPush = true;
+                }
+            }
+            
+            if (!skipPush) {
+                size += (fontSize * advance);
+            }
+        }
+        
+        return size;
+    }
+
     public static void render(float x, float y, GLFontSpecification font, String text) {
         render(x, y, new GLFontSpecification[]{font}, new String[]{text});
     }
@@ -206,7 +247,6 @@ public class GLFontRenderer {
 
                 switch (unicode) {
                     case '\r' -> {
-                        x = cursorReturnX;
                         skipPush = true;
                     }
                     case '\n' -> {
@@ -223,15 +263,15 @@ public class GLFontRenderer {
                         skipPush = true;
                     }
                 }
-                
+
                 if (!skipPush) {
                     float charWidth = rawCharacter.getAtlasBoundsRight() - rawCharacter.getAtlasBoundsLeft();
                     float charHeight = rawCharacter.getAtlasBoundsTop() - rawCharacter.getAtlasBoundsBottom();
                     float quadWidth = ((rawCharacter.getPlaneBoundsRight() - rawCharacter.getPlaneBoundsLeft()) * fontSize) * Main.WIDTH;
                     float quadHeight = ((rawCharacter.getPlaneBoundsTop() - rawCharacter.getPlaneBoundsBottom()) * fontSize) * Main.HEIGHT;
-                    
-                    float pxRange = (((quadWidth/charWidth) * 4f) + ((quadHeight/charHeight) * 4f)) / 2f;
-                    
+
+                    float pxRange = (((quadWidth / charWidth) * 4f) + ((quadHeight / charHeight) * 4f)) / 2f;
+
                     ubo.push(unicodeIndex, pxRange, x, y);
                     x += (fontSize * advance);
                 }

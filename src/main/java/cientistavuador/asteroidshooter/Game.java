@@ -36,8 +36,12 @@ import cientistavuador.asteroidshooter.menus.ControlsMenu;
 import cientistavuador.asteroidshooter.menus.MainMenu;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.text.GLFontRenderer;
+import cientistavuador.asteroidshooter.text.GLFontSpecification;
+import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
+import cientistavuador.asteroidshooter.util.CursorShapes;
 import java.nio.FloatBuffer;
 import org.joml.Matrix4f;
 import static org.lwjgl.glfw.GLFW.*;
@@ -67,6 +71,8 @@ public class Game {
     private AsteroidController controller = null;
     private Spaceship spaceship = null;
     
+    private boolean debugEnabled = false;
+    
     private Game() {
         this.clickAudioSource = alGenSources();
         alSourcei(this.clickAudioSource, AL_BUFFER, Sounds.CLICK.getAudioBuffer());
@@ -79,10 +85,6 @@ public class Game {
         this.camera.setNearPlane(-10f);
         this.camera.setPosition(0, 0, 0);
         this.camera.setFront(0f, 0f, -1f);
-
-        this.audioButton.setDebugEnabled(true);
-        this.mainMenu.setDebugEnabled(true);
-        this.controlsMenu.setDebugEnabled(true);
 
         this.controlsMenu.setEnabled(false);
     }
@@ -116,7 +118,7 @@ public class Game {
             this.controller.loop(cameraMatrix, this.spaceship);
             this.spaceship.loop(cameraMatrix, this.controller);
             
-            if (this.spaceship.isDead()) {
+            if (this.spaceship.shouldBeRemoved()) {
                 this.spaceship = null;
                 this.controller = null;
                 
@@ -136,9 +138,6 @@ public class Game {
             if (this.spaceship == null) {
                 this.spaceship = new Spaceship();
                 this.controller = new AsteroidController();
-                
-                this.spaceship.setDebugEnabled(true);
-                this.controller.setDebugEnabled(true);
                 
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
@@ -186,7 +185,7 @@ public class Game {
         }
         
         AabRender.renderQueue(camera);
-
+        
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";
     }
 
@@ -201,6 +200,20 @@ public class Game {
     }
 
     public void keyCallback(long window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
+            this.debugEnabled = !this.debugEnabled;
+            
+            if (this.spaceship != null) {
+                this.spaceship.setDebugEnabled(this.debugEnabled);
+            }
+            if (this.controller != null) {
+                this.controller.setDebugEnabled(this.debugEnabled);
+            }
+            
+            this.mainMenu.setDebugEnabled(this.debugEnabled);
+            this.controlsMenu.setDebugEnabled(this.debugEnabled);
+            this.audioButton.setDebugEnabled(this.debugEnabled);
+        }
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
             if (this.spaceship == null) {
                 return;

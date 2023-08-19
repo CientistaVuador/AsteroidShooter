@@ -32,6 +32,7 @@ import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
+import cientistavuador.asteroidshooter.util.CursorShapes;
 import java.io.PrintStream;
 import java.nio.DoubleBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -274,6 +275,7 @@ public class Main {
         Textures.init(); //static initialize
         SoundSystem.init(); //static initialize
         Sounds.init(); //static initialize
+        CursorShapes.init(); //static initialize
         Game.get(); //static initialize
 
         Main.checkGLError();

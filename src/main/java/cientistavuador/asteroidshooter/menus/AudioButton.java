@@ -42,8 +42,8 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public class AudioButton {
     private static final Matrix4f buttonModel = new Matrix4f()
-            .translate(0.85f, -0.85f, 2f)
-            .scale(0.2f, 0.2f, 1f)
+            .translate(0.88f, -0.88f, 2f)
+            .scale(0.15f, 0.15f, 1f)
             ;
     
     private static final Aab buttonAab = new Aab() {

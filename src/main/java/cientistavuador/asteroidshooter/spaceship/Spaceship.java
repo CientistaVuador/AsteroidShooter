@@ -109,6 +109,16 @@ public class Spaceship implements Aab {
         }
     }
 
+    public boolean shouldBeRemoved() {
+        boolean removed = this.dead;
+        if (removed) {
+            for (LaserShot s:this.laserShots) {
+                s.cleanup();
+            }
+        }
+        return this.dead;
+    }
+    
     public boolean isDead() {
         return dead;
     }
@@ -135,9 +145,6 @@ public class Spaceship implements Aab {
     
     public void onAsteroidHit(Asteroid s) {
         this.dead = true;
-        for (LaserShot e:this.laserShots) {
-            e.cleanup();
-        }
     }
 
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
@@ -195,6 +202,10 @@ public class Spaceship implements Aab {
                 LaserShot shot = new LaserShot(this, this.position, this.direction, this.audioEnabled);
                 shot.setFrozen(this.frozen);
                 this.laserShots.add(shot);
+            }
+            
+            if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_R) == GLFW_PRESS) {
+                this.dead = true;
             }
         }
 

@@ -24,49 +24,40 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.text;
+package cientistavuador.asteroidshooter.util;
+
+import cientistavuador.asteroidshooter.Main;
+import static org.lwjgl.glfw.GLFW.*;
 
 /**
  *
  * @author Cien
  */
-public class GLFonts {
+public class CursorShapes {
     
-    public static final boolean DEBUG_OUTPUT = true;
-    
-    public static final GLFont ROBOTO_BOLD;
-    public static final GLFont OPENSANS_LIGHT_ITALIC;
-    public static final GLFont ORBITRON_REGULAR;
-    public static final GLFont TEKTUR_REGULAR;
+    public static final long ARROW;
+    public static final long IBEAM;
+    public static final long CROSSHAIR;
+    public static final long HAND;
+    public static final long HRESIZE;
+    public static final long VRESIZE;
     
     static {
-        if (DEBUG_OUTPUT) {
-            System.out.println("Loading fonts.");
-        }
-        
-        GLFont[] fonts = GLFontLoader.load(new String[] {
-            "Roboto-Bold.zip",
-            "OpenSans-Light-Italic.zip",
-            "Orbitron-Regular.zip",
-            "Tektur-Regular.zip"
-        });
-        
-        ROBOTO_BOLD = fonts[0];
-        OPENSANS_LIGHT_ITALIC = fonts[1];
-        ORBITRON_REGULAR = fonts[2];
-        TEKTUR_REGULAR = fonts[3];
-        
-        if (DEBUG_OUTPUT) {
-            System.out.println("Finished loading fonts.");
-        }
+        System.out.println("Initializing cursor shapes...");
+        ARROW = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+        IBEAM = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+        CROSSHAIR = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+        HAND = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+        HRESIZE = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+        VRESIZE = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+        System.out.println("Cursor shapes initialized.");
     }
     
     public static void init() {
         
     }
     
-    private GLFonts() {
+    private CursorShapes() {
         
     }
-    
 }

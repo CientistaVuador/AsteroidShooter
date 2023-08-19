@@ -29,6 +29,8 @@ package cientistavuador.asteroidshooter.menus;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.text.GLFontRenderer;
+import cientistavuador.asteroidshooter.text.GLFontSpecifications;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
@@ -41,28 +43,27 @@ import static org.lwjgl.opengl.GL33C.*;
  * @author Cien
  */
 public class ControlsMenu {
+
     private static final Matrix4f controlsModel = new Matrix4f()
             .translate(0f, -0.15f, 2f)
-            .scale(1f, 1.5f, 1f)
-            ;
-    
+            .scale(1f, 1.5f, 1f);
+
     private static final Matrix4f backModel = new Matrix4f()
             .translate(0f, 0.80f, 2f)
-            .scale(0.60f, 0.30f, 1f)
-            ;
-    
+            .scale(0.35f, 0.20f, 1f);
+
     private static final Aab backAab = new Aab() {
         private final Vector3f min = new Vector3f();
         private final Vector3f max = new Vector3f();
-        
+
         {
             min.set(-0.5f, -0.5f, 0f);
             max.set(0.5f, 0.5f, 0f);
-            
+
             ControlsMenu.backModel.transformProject(this.min);
             ControlsMenu.backModel.transformProject(this.max);
         }
-        
+
         @Override
         public void getMin(Vector3f min) {
             min.set(this.min);
@@ -73,14 +74,38 @@ public class ControlsMenu {
             max.set(this.max);
         }
     };
+
+    private static final String backText = "BACK";
+    private static final float backTextLineSize = GLFontRenderer.lineSize(GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE, backText);
+
+    private static final String controlsText = 
+            """
+            W - Move Up
+            
+            S - Move Down
+            
+            A - Move Left
+            
+            D - Move Right
+            
+            R - Self Destruct
+            
+            Space - Shoot
+            
+            Mouse - Aim
+            
+            Esc - Pause
+            
+            F3 - Show/Hide Hitboxes
+            """;
     
     private boolean enabled = true;
-    
+
     private boolean debugEnabled = false;
     private boolean backButtonSignal = false;
-    
+
     public ControlsMenu() {
-        
+
     }
 
     public boolean isEnabled() {
@@ -90,7 +115,7 @@ public class ControlsMenu {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     public boolean isDebugEnabled() {
         return debugEnabled;
     }
@@ -98,7 +123,7 @@ public class ControlsMenu {
     public void setDebugEnabled(boolean debugEnabled) {
         this.debugEnabled = debugEnabled;
     }
-    
+
     public boolean backButtonPressedSignal() {
         if (this.backButtonSignal) {
             this.backButtonSignal = false;
@@ -106,46 +131,73 @@ public class ControlsMenu {
         }
         return false;
     }
-    
+
     public void forceBackButtonPressedSignal() {
         this.backButtonSignal = true;
     }
-    
+
     public void loop(Matrix4f projectionView) {
         if (!this.enabled) {
             return;
         }
-        
+
+        Aab mouse = new Aab() {
+            private final Vector3f min = new Vector3f(Main.MOUSE_X, Main.MOUSE_Y, 0f);
+            private final Vector3f max = min;
+
+            @Override
+            public void getMin(Vector3f min) {
+                min.set(this.min);
+            }
+
+            @Override
+            public void getMax(Vector3f max) {
+                max.set(this.max);
+            }
+        };
+
+        boolean hoverBack = backAab.testAab2D(mouse);
+
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.GUI.getVAO());
-        
+
         GeometryProgram.sendUniforms(projectionView, ControlsMenu.controlsModel, Textures.CONTROLS);
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
-        GeometryProgram.sendUniforms(projectionView, ControlsMenu.backModel, Textures.BUTTON);
+
+        GeometryProgram.sendUniforms(projectionView, ControlsMenu.backModel, (hoverBack ? Textures.BUTTON_HOVER : Textures.BUTTON));
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
+
         Main.NUMBER_OF_DRAWCALLS += 2;
         Main.NUMBER_OF_VERTICES += (Geometries.GUI.getAmountOfIndices() * 2);
-        
+
         glBindVertexArray(0);
         glUseProgram(0);
+
+        float shadowXOffset = 0.005f;
+        float shadowYOffset = -0.005f;
+        GLFontRenderer.render(-(backTextLineSize * 0.5f) + shadowXOffset, 0.79f + shadowYOffset, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLACK, backText);
+        GLFontRenderer.render(-(backTextLineSize * 0.5f), 0.79f, (hoverBack ? GLFontSpecifications.TEKTUR_REGULAR_0_06_GOLD : GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE), backText);
+
+        float textX = -0.40f;
+        float textY = 0.40f;
+        GLFontRenderer.render(textX + shadowXOffset, textY + shadowYOffset, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLACK, controlsText);
+        GLFontRenderer.render(textX, textY, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE, controlsText);
         
         if (this.debugEnabled) {
             backAab.queueAabRender();
         }
     }
-    
+
     public void mouseCallback(long window, int button, int action, int mods) {
         if (!this.enabled) {
             return;
         }
-        
+
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
             Aab mouse = new Aab() {
                 private final Vector3f min = new Vector3f(Main.MOUSE_X, Main.MOUSE_Y, 0f);
                 private final Vector3f max = min;
-                
+
                 @Override
                 public void getMin(Vector3f min) {
                     min.set(this.min);
@@ -156,7 +208,7 @@ public class ControlsMenu {
                     max.set(this.max);
                 }
             };
-            
+
             if (ControlsMenu.backAab.testAab2D(mouse)) {
                 this.backButtonSignal = true;
             }

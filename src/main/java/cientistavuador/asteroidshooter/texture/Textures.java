@@ -26,6 +26,8 @@
  */
 package cientistavuador.asteroidshooter.texture;
 
+import static org.lwjgl.opengl.GL33C.*;
+
 /**
  *
  * @author Cien
@@ -40,6 +42,7 @@ public class Textures {
     public static final int BUTTON;
     public static final int CONTROLS;
     public static final int TITLE;
+    public static final int BUTTON_HOVER;
     
     static {
         int[] textures = TexturesLoader.load(
@@ -50,7 +53,8 @@ public class Textures {
                 "audio_on.png",
                 "button.png",
                 "controls.png",
-                "title.png"
+                "title.png",
+                "button_hover.png"
         );
         
         STONE = textures[0];
@@ -61,6 +65,20 @@ public class Textures {
         BUTTON = textures[5];
         CONTROLS = textures[6];
         TITLE = textures[7];
+        BUTTON_HOVER = textures[8];
+        
+        glActiveTexture(GL_TEXTURE0);
+        
+        glBindTexture(GL_TEXTURE_2D, BUTTON);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, BUTTON_HOVER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, CONTROLS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
     
     public static void init() {

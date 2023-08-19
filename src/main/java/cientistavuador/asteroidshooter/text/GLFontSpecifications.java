@@ -34,6 +34,9 @@ public class GLFontSpecifications {
     
     public static final GLFontSpecification ROBOTO_THIN_0_05_WHITE = new GLFontSpecification(GLFonts.ROBOTO_BOLD, 0.05f, GLFontSpecification.THIN, 1f, 1f, 1f, 1f);
     public static final GLFontSpecification OPENSANS_ITALIC_0_10_BANANA_YELLOW = new GLFontSpecification(GLFonts.OPENSANS_LIGHT_ITALIC, 0.10f, GLFontSpecification.NORMAL, 255f / 255f, 216f / 255f, 50f / 255f, 1f);
+    public static final GLFontSpecification TEKTUR_REGULAR_0_06_BLUISH_WHITE = new GLFontSpecification(GLFonts.TEKTUR_REGULAR, 0.06f, GLFontSpecification.NORMAL, 0.90f, 0.90f, 1f, 1f);
+    public static final GLFontSpecification TEKTUR_REGULAR_0_06_GOLD = TEKTUR_REGULAR_0_06_BLUISH_WHITE.withColor(255f / 255f, 215f / 255f, 0f / 255f, 1f);
+    public static final GLFontSpecification TEKTUR_REGULAR_0_06_BLACK = TEKTUR_REGULAR_0_06_GOLD.withColor(0f, 0f, 0f, 1f);
     
     private GLFontSpecifications() {
         
