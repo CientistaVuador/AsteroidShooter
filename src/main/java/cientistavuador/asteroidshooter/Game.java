@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter;
 
 import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
+import cientistavuador.asteroidshooter.background.Background;
 import cientistavuador.asteroidshooter.camera.OrthoCamera;
 import cientistavuador.asteroidshooter.camera.PerspectiveCamera;
 import cientistavuador.asteroidshooter.debug.AabRender;
@@ -65,6 +66,7 @@ public class Game {
     private final MainMenu mainMenu = new MainMenu();
     private final AudioButton audioButton = new AudioButton();
     private final ControlsMenu controlsMenu = new ControlsMenu();
+    private final Background background = new Background();
 
     private final int clickAudioSource;
     
@@ -105,7 +107,10 @@ public class Game {
         this.camera.getUBO().updateUBO();
 
         Matrix4f cameraMatrix = new Matrix4f(camera.getProjectionView());
-
+        
+        //background
+        this.background.loop();
+        
         if (this.spaceship != null) {
             if (!this.controller.isFrozen()) {
                 this.counter += Main.TPF;

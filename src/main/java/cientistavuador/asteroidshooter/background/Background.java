@@ -24,44 +24,50 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.geometry;
+package cientistavuador.asteroidshooter.background;
 
-import cientistavuador.asteroidshooter.resources.mesh.MeshData;
+import cientistavuador.asteroidshooter.Main;
+import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.shader.BackgroundProgram;
+import cientistavuador.asteroidshooter.texture.Textures;
+import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
  * @author Cien
  */
-public class Geometries {
+public class Background {
 
-    public static final MeshData ASTEROID;
-    public static final MeshData SPACESHIP;
-    public static final MeshData LASER;
-    public static final MeshData GUI;
-    public static final MeshData BACKGROUND;
-    
-    static {
-        MeshData[] meshes = GeometriesLoader.load(
-                "asteroid.obj",
-                "spaceship.obj",
-                "laser.obj",
-                "gui.obj",
-                "background.obj"
-        );
+    public Background() {
+
+    }
+
+    public void loop() {
+        float scaleX = 1f;
+        float scaleY = 1f;
+
+        int windowWidth = Main.WIDTH;
+        int windowHeight = Main.HEIGHT;
+
+        if (windowWidth != windowHeight) {
+            if (windowWidth > windowHeight) {
+                scaleY = windowHeight / ((float)windowWidth);
+            } else {
+                scaleX = windowWidth / ((float)windowHeight);
+            }
+        }
         
-        ASTEROID = meshes[0];
-        SPACESHIP = meshes[1];
-        LASER = meshes[2];
-        GUI = meshes[3];
-        BACKGROUND = meshes[4];
-    }
-    
-    public static void init() {
+        glUseProgram(BackgroundProgram.SHADER_PROGRAM);
+        BackgroundProgram.sendUniforms(scaleX, scaleY, Textures.PLANET_BACKGROUND);
+        glBindVertexArray(Geometries.BACKGROUND.getVAO());
 
-    }
+        glDrawElements(GL_TRIANGLES, Geometries.BACKGROUND.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
-    private Geometries() {
+        Main.NUMBER_OF_DRAWCALLS++;
+        Main.NUMBER_OF_VERTICES += Geometries.BACKGROUND.getAmountOfIndices();
 
+        glBindVertexArray(0);
+        glUseProgram(0);
     }
 
 }

@@ -43,6 +43,7 @@ public class Textures {
     public static final int CONTROLS;
     public static final int TITLE;
     public static final int BUTTON_HOVER;
+    public static final int PLANET_BACKGROUND;
     
     static {
         int[] textures = TexturesLoader.load(
@@ -54,7 +55,8 @@ public class Textures {
                 "button.png",
                 "controls.png",
                 "title.png",
-                "button_hover.png"
+                "button_hover.png",
+                "planet_background.png"
         );
         
         STONE = textures[0];
@@ -66,6 +68,7 @@ public class Textures {
         CONTROLS = textures[6];
         TITLE = textures[7];
         BUTTON_HOVER = textures[8];
+        PLANET_BACKGROUND = textures[9];
         
         glActiveTexture(GL_TEXTURE0);
         
@@ -76,6 +79,9 @@ public class Textures {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
         glBindTexture(GL_TEXTURE_2D, CONTROLS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, PLANET_BACKGROUND);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
         glBindTexture(GL_TEXTURE_2D, 0);
