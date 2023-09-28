@@ -110,12 +110,6 @@ public class Spaceship implements Aab {
     }
 
     public boolean shouldBeRemoved() {
-        boolean removed = this.dead;
-        if (removed) {
-            for (LaserShot s:this.laserShots) {
-                s.cleanup();
-            }
-        }
         return this.dead;
     }
     

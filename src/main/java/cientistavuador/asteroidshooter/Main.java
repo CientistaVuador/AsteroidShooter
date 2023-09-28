@@ -32,6 +32,7 @@ import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
+import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.CursorShapes;
 import java.io.PrintStream;
 import java.nio.DoubleBuffer;
@@ -349,6 +350,8 @@ public class Main {
             while ((r = MAIN_TASKS.poll()) != null) {
                 r.run();
             }
+            
+            ALSourceUtil.update();
 
             Game.get().loop();
 

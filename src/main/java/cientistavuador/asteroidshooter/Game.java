@@ -178,7 +178,9 @@ public class Game {
             if (this.spaceship != null) {
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
-            
+            if (this.controller != null) {
+                this.controller.setAudioEnabled(this.audioButton.isAudioEnabled());
+            }
             buttonPressed = true;
         }
         

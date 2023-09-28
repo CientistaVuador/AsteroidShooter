@@ -33,6 +33,7 @@ import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.texture.Textures;
+import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -51,7 +52,9 @@ public class LaserShot implements Aab {
     public static final float LASER_HEIGHT = 0.025f;
 
     public static final float LASER_SPEED = 2.5f;
-    public static final float LASER_DAMAGE = 50f;
+    
+    public static final float LASER_MIN_DAMAGE = 25f;
+    public static final float LASER_MAX_DAMAGE = 60f;
 
     private final Spaceship spaceship;
     private final Vector3f position = new Vector3f();
@@ -59,13 +62,13 @@ public class LaserShot implements Aab {
 
     private final Matrix4f model = new Matrix4f();
 
-    private final int laserShotAudioSource;
+    private final float damage = (float) (LASER_MIN_DAMAGE + ((LASER_MAX_DAMAGE - LASER_MIN_DAMAGE) * Math.random()));
     
+    private int laserShotAudioSource;
     private boolean hitAsteroidOrScreen = false;
-    private float damage = LASER_DAMAGE;
     private boolean frozen = false;
     private boolean audioEnabled = true;
-    
+
     protected LaserShot(Spaceship spaceship, Vector3fc position, Vector3fc direction, boolean audioEnabled) {
         this.spaceship = spaceship;
         this.position.set(position);
@@ -76,6 +79,9 @@ public class LaserShot implements Aab {
             alSourcei(this.laserShotAudioSource, AL_BUFFER, Sounds.LASER.getAudioBuffer());
             alSource3f(this.laserShotAudioSource, AL_POSITION, this.position.x(), this.position.y(), this.position.z());
             alSourcePlay(this.laserShotAudioSource);
+            ALSourceUtil.deleteWhenStopped(this.laserShotAudioSource, () -> {
+                this.laserShotAudioSource = 0;
+            });
         } else {
             this.laserShotAudioSource = 0;
         }
@@ -108,27 +114,9 @@ public class LaserShot implements Aab {
     public float getDamage() {
         return damage;
     }
-
-    public void setDamage(float damage) {
-        this.damage = damage;
-    }
-
-    public void cleanup() {
-        if (this.laserShotAudioSource != 0) {
-            alSourceStop(this.laserShotAudioSource);
-            alDeleteSources(this.laserShotAudioSource);
-        }
-    }
     
     public boolean shouldBeRemoved() {
         this.hitAsteroidOrScreen = !Spaceship.SCREEN_AAB.testAab2D(this) || this.hitAsteroidOrScreen;
-        if (this.hitAsteroidOrScreen && this.laserShotAudioSource != 0) {
-            if (alGetSourcei(this.laserShotAudioSource, AL_SOURCE_STATE) == AL_STOPPED) {
-                cleanup();
-                return true;
-            }
-            return false;
-        }
         return this.hitAsteroidOrScreen;
     }
 
@@ -136,26 +124,33 @@ public class LaserShot implements Aab {
         if (this.hitAsteroidOrScreen) {
             return;
         }
-        
+
         if (!this.frozen) {
             this.position.add((float) (this.direction.x() * Main.TPF * LASER_SPEED),
                     (float) (this.direction.y() * Main.TPF * LASER_SPEED),
                     (float) (this.direction.z() * Main.TPF * LASER_SPEED)
             );
-            
+
             if (this.laserShotAudioSource != 0) {
                 alSource3f(this.laserShotAudioSource, AL_VELOCITY, this.direction.x() * LASER_SPEED, this.direction.y() * LASER_SPEED, 0f);
                 alSource3f(this.laserShotAudioSource, AL_POSITION, this.position.x(), this.position.y(), this.position.z());
             }
-            
+
             this.model
                     .identity()
                     .translate(this.position)
                     .scale(LASER_RENDER_SCALE);
 
-            for (Asteroid s : asteroids.getAsterois()) {
+            for (Asteroid s : asteroids.getAsteroids()) {
                 if (s.testAab2D(this)) {
                     this.hitAsteroidOrScreen = true;
+                    if (this.audioEnabled) {
+                        int hitAudio = alGenSources();
+                        alSourcei(hitAudio, AL_BUFFER, Sounds.HIT.getAudioBuffer());
+                        alSource3f(hitAudio, AL_POSITION, this.position.x(), this.position.y(), this.position.z());
+                        alSourcePlay(hitAudio);
+                        ALSourceUtil.deleteWhenStopped(hitAudio, null);
+                    }
                     s.onLaserHit(this);
                     break;
                 }
@@ -176,7 +171,7 @@ public class LaserShot implements Aab {
         }
         Aab.super.queueAabRender();
     }
-    
+
     @Override
     public void getMin(Vector3f min) {
         min.set(

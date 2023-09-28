@@ -36,15 +36,21 @@ public class Sounds {
     
     public static final NativeAudio LASER;
     public static final NativeAudio CLICK;
+    public static final NativeAudio HIT;
+    public static final NativeAudio EXPLOSION;
     
     static {
         NativeAudio[] sounds = SoundLoader.load(new String[] {
             "laser.ogg",
-            "click.ogg"
+            "click.ogg",
+            "hit.ogg",
+            "explosion.ogg"
         });
         
         LASER = sounds[0];
         CLICK = sounds[1];
+        HIT = sounds[2];
+        EXPLOSION = sounds[3];
     }
     
     public static void init() {

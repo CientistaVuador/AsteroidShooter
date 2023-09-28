@@ -28,12 +28,15 @@ package cientistavuador.asteroidshooter.asteroid;
 
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL33C.*;
+import static org.lwjgl.openal.AL11.*;
 
 /**
  *
@@ -41,12 +44,17 @@ import static org.lwjgl.opengl.GL33C.*;
  */
 public class AsteroidController {
 
-    private final List<Asteroid> asterois = new ArrayList<>();
-    private boolean debugEnabled = false;
-    private boolean frozen = false;
+    public static final int MIN_AMOUNT_OF_DEBRIS = 5;
+    public static final int MAX_AMOUNT_OF_DEBRIS = 8;
     
+    private final List<Asteroid> asteroids = new ArrayList<>();
+    private final List<AsteroidDebris> asteroidsDebris = new ArrayList<>();
+    private boolean debugEnabled = false;
+    private boolean audioEnabled = true;
+    private boolean frozen = false;
+
     public AsteroidController() {
-        
+
     }
 
     public boolean isFrozen() {
@@ -55,9 +63,20 @@ public class AsteroidController {
 
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
-        for (Asteroid s:this.asterois) {
+        for (Asteroid s : this.asteroids) {
             s.setFrozen(frozen);
         }
+        for (AsteroidDebris s : this.asteroidsDebris) {
+            s.setFrozen(frozen);
+        }
+    }
+
+    public boolean isAudioEnabled() {
+        return audioEnabled;
+    }
+
+    public void setAudioEnabled(boolean audioEnabled) {
+        this.audioEnabled = audioEnabled;
     }
 
     public boolean isDebugEnabled() {
@@ -71,7 +90,7 @@ public class AsteroidController {
     public Asteroid spawnAsteroid() {
         final float distance = 1.4f;
         Asteroid asteroid = new Asteroid(this);
-        
+
         for (int i = 0; i < 5; i++) {
             Vector3f initialPosition = new Vector3f()
                     .set((Math.random() * 2f) - 1f, (Math.random() * 2f) - 1f, 0)
@@ -82,12 +101,12 @@ public class AsteroidController {
                     .normalize()
                     .rotateZ((float) ((Math.random() - 0.5) * Math.PI))
                     .mul(distance);
-            
+
             asteroid.getInitialPosition().set(initialPosition);
             asteroid.getFinalPosition().set(finalPosition);
-            
+
             boolean collision = false;
-            for (Asteroid other : this.asterois) {
+            for (Asteroid other : this.asteroids) {
                 if (asteroid.testAab2D(other)) {
                     collision = true;
                     break;
@@ -99,22 +118,40 @@ public class AsteroidController {
         }
 
         asteroid.setFrozen(this.frozen);
-        this.asterois.add(asteroid);
+        this.asteroids.add(asteroid);
         return asteroid;
     }
 
     public void onAsteroidRemove(Asteroid e) {
-        this.asterois.remove(e);
+        this.asteroids.remove(e);
     }
 
-    public List<Asteroid> getAsterois() {
-        return asterois;
+    public void onAsteroidDestroyed(Asteroid e) {
+        if (this.audioEnabled) {
+            int explosionAudio = alGenSources();
+            alSourcei(explosionAudio, AL_BUFFER, Sounds.EXPLOSION.getAudioBuffer());
+            alSource3f(explosionAudio, AL_POSITION, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
+            alSourcePlay(explosionAudio);
+            ALSourceUtil.deleteWhenStopped(explosionAudio, null);
+        }
+        
+        int amountOfDebris = (int) Math.floor(MIN_AMOUNT_OF_DEBRIS + ((MAX_AMOUNT_OF_DEBRIS - MIN_AMOUNT_OF_DEBRIS) * Math.random()));
+        
+        for (int i = 0; i < amountOfDebris; i++) {
+            AsteroidDebris debris = new AsteroidDebris(this, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
+            this.asteroidsDebris.add(debris);
+        }
+    }
+
+    public List<Asteroid> getAsteroids() {
+        return asteroids;
     }
 
     public void loop(Matrix4f projectionView, Spaceship ship) {
-        List<Asteroid> copy = new ArrayList<>(this.asterois);
         glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.ASTEROID.getVAO());
+        
+        Asteroid[] copy = this.asteroids.toArray(Asteroid[]::new);
         for (Asteroid a : copy) {
             if (a.shouldBeRemoved()) {
                 onAsteroidRemove(a);
@@ -125,6 +162,16 @@ public class AsteroidController {
                 a.queueAabRender();
             }
         }
+        
+        AsteroidDebris[] debrisCopy = this.asteroidsDebris.toArray(AsteroidDebris[]::new);
+        for (AsteroidDebris a:debrisCopy) {
+            if (a.shouldBeRemoved()) {
+                this.asteroidsDebris.remove(a);
+                continue;
+            }
+            a.loop(projectionView);
+        }
+        
         glBindVertexArray(0);
         glUseProgram(0);
     }

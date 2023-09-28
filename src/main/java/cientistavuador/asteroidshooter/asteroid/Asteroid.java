@@ -45,10 +45,12 @@ import static org.lwjgl.opengl.GL33C.*;
 public class Asteroid implements Aab {
 
     public static final float ASTEROID_RENDER_SCALE = 0.15f;
-    public static final float ASTEROID_WIDTH = 0.15f;
-    public static final float ASTEROID_HEIGHT = 0.15f;
+    public static final float ASTEROID_WIDTH = 0.12f;
+    public static final float ASTEROID_HEIGHT = 0.12f;
     public static final float ASTEROID_SPEED = 0.2f;
-    public static final float ASTEROID_HEALTH = 100f;
+    
+    public static final float ASTEROID_MIN_HEALTH = 90f;
+    public static final float ASTEROID_MAX_HEALTH = 140f;
 
     private final AsteroidController controller;
     private final Matrix4f model = new Matrix4f();
@@ -62,11 +64,11 @@ public class Asteroid implements Aab {
     private float currentPosition = 0f;
 
     private final Vector3f position = new Vector3f();
-
-    private float health = ASTEROID_HEALTH;
-
+    
+    private float health = (float) (ASTEROID_MIN_HEALTH + ((ASTEROID_MAX_HEALTH - ASTEROID_MIN_HEALTH) * Math.random()));
+    
     private boolean frozen = false;
-
+    
     protected Asteroid(AsteroidController controller) {
         this.controller = controller;
     }
@@ -117,6 +119,17 @@ public class Asteroid implements Aab {
 
     public void onLaserHit(LaserShot shot) {
         this.health -= shot.getDamage();
+        if (this.health <= 0f) {
+            this.controller.onAsteroidDestroyed(this);
+        }
+    }
+    
+    public void onAsteroidHitByAnotherAsteroid(Asteroid asteroid) {
+        if (this.health <= 0f) {
+            return;
+        }
+        this.health = 0f;
+        this.controller.onAsteroidDestroyed(this);
     }
 
     public void loop(Matrix4f projectionView, Spaceship ship) {
@@ -142,7 +155,14 @@ public class Asteroid implements Aab {
             
             if (ship.testAab2D(this)) {
                 ship.onAsteroidHit(this);
-                this.health = 0f;
+            }
+            
+            for (Asteroid s:this.controller.getAsteroids()) {
+                if (!s.equals(this) && s.testAab2D(this)) {
+                    this.onAsteroidHitByAnotherAsteroid(this);
+                    s.onAsteroidHitByAnotherAsteroid(this);
+                    break;
+                }
             }
         }
 
