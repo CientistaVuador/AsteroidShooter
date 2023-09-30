@@ -65,7 +65,8 @@ public class Asteroid implements Aab {
 
     private final Vector3f position = new Vector3f();
     
-    private float health = (float) (ASTEROID_MIN_HEALTH + ((ASTEROID_MAX_HEALTH - ASTEROID_MIN_HEALTH) * Math.random()));
+    private final float initialHealth = (float) (ASTEROID_MIN_HEALTH + ((ASTEROID_MAX_HEALTH - ASTEROID_MIN_HEALTH) * Math.random()));
+    private float health = this.initialHealth;
     
     private boolean frozen = false;
     
@@ -113,14 +114,21 @@ public class Asteroid implements Aab {
         this.health = health;
     }
 
+    public float getInitialHealth() {
+        return initialHealth;
+    }
+    
     public boolean shouldBeRemoved() {
         return this.currentPosition >= 1f || this.health <= 0f;
     }
 
     public void onLaserHit(LaserShot shot) {
-        this.health -= shot.getDamage();
+        float shotDamage = shot.getDamageWithFalloff();
+        boolean criticalHit = shotDamage > this.initialHealth;
+        
+        this.health -= shot.getDamageWithFalloff();
         if (this.health <= 0f) {
-            this.controller.onAsteroidDestroyed(this);
+            this.controller.onAsteroidDestroyed(this, shot, criticalHit);
         }
     }
     
@@ -129,10 +137,10 @@ public class Asteroid implements Aab {
             return;
         }
         this.health = 0f;
-        this.controller.onAsteroidDestroyed(this);
+        this.controller.onAsteroidDestroyed(this, asteroid, false);
     }
 
-    public void loop(Matrix4f projectionView, Spaceship ship) {
+    public void loop(Spaceship ship) {
         if (!this.frozen) {
             this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
 
@@ -166,7 +174,7 @@ public class Asteroid implements Aab {
             }
         }
 
-        GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
+        GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.ASTEROID.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
         Main.NUMBER_OF_DRAWCALLS++;

@@ -203,27 +203,36 @@ public class Spaceship implements Aab {
             }
         }
 
+        GeometryProgram.INSTANCE.use();
+        GeometryProgram.INSTANCE.setProjectionView(projectionView);
+        GeometryProgram.INSTANCE.setTextureUnit(0);
+        GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
+        
+        glActiveTexture(GL_TEXTURE0);
+        
+        //laser shots
         List<LaserShot> copy = new ArrayList<>(this.laserShots);
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.LASER.getVAO());
+        glBindTexture(GL_TEXTURE_2D, Textures.LASER);
         for (LaserShot s : copy) {
             if (s.shouldBeRemoved()) {
                 this.laserShots.remove(s);
                 continue;
             }
-            s.loop(projectionView, asteroids);
+            s.loop(asteroids);
             if (this.debugEnabled) {
                 s.queueAabRender();
             }
         }
         glBindVertexArray(0);
-        glUseProgram(0);
 
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
-        GeometryProgram.sendUniforms(projectionView, this.model, Textures.SPACESHIP);
+        //spaceship
         glBindVertexArray(Geometries.SPACESHIP.getVAO());
+        glBindTexture(GL_TEXTURE_2D, Textures.SPACESHIP);
+        GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.SPACESHIP.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+        
         glUseProgram(0);
 
         Main.NUMBER_OF_DRAWCALLS++;

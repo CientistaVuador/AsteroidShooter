@@ -29,7 +29,9 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
+import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +48,7 @@ public class AsteroidController {
 
     public static final int MIN_AMOUNT_OF_DEBRIS = 5;
     public static final int MAX_AMOUNT_OF_DEBRIS = 8;
-    
+
     private final List<Asteroid> asteroids = new ArrayList<>();
     private final List<AsteroidDebris> asteroidsDebris = new ArrayList<>();
     private boolean debugEnabled = false;
@@ -126,16 +128,32 @@ public class AsteroidController {
         this.asteroids.remove(e);
     }
 
-    public void onAsteroidDestroyed(Asteroid e) {
+    public void onAsteroidDestroyed(Asteroid e, Object cause, boolean criticalHit) {
         if (this.audioEnabled) {
-            int explosionAudio = alGenSources();
-            alSourcei(explosionAudio, AL_BUFFER, Sounds.EXPLOSION.getAudioBuffer());
-            alSource3f(explosionAudio, AL_POSITION, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
-            alSourcePlay(explosionAudio);
-            ALSourceUtil.deleteWhenStopped(explosionAudio, null);
+            int sound = 0;
+            if (cause instanceof LaserShot) {
+                sound = Sounds.EXPLOSION.getAudioBuffer();
+            }
+            if (cause instanceof Asteroid) {
+                sound = Sounds.ROCK_HIT.getAudioBuffer();
+            }
+            if (sound != 0) {
+                int explosionAudio = alGenSources();
+                alSourcei(explosionAudio, AL_BUFFER, sound);
+                if (criticalHit) {
+                    alSourcef(explosionAudio, AL_PITCH, 0.75f);
+                }
+                alSource3f(explosionAudio, AL_POSITION, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
+                alSourcePlay(explosionAudio);
+                ALSourceUtil.deleteWhenStopped(explosionAudio, null);
+            }
         }
-        
+
         int amountOfDebris = (int) Math.floor(MIN_AMOUNT_OF_DEBRIS + ((MAX_AMOUNT_OF_DEBRIS - MIN_AMOUNT_OF_DEBRIS) * Math.random()));
+        
+        if (criticalHit) {
+            amountOfDebris *= 2;
+        }
         
         for (int i = 0; i < amountOfDebris; i++) {
             AsteroidDebris debris = new AsteroidDebris(this, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
@@ -148,30 +166,37 @@ public class AsteroidController {
     }
 
     public void loop(Matrix4f projectionView, Spaceship ship) {
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
+        GeometryProgram.INSTANCE.use();
+        GeometryProgram.INSTANCE.setProjectionView(projectionView);
+        GeometryProgram.INSTANCE.setTextureUnit(0);
+        GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, Textures.STONE);
+
         glBindVertexArray(Geometries.ASTEROID.getVAO());
-        
+
         Asteroid[] copy = this.asteroids.toArray(Asteroid[]::new);
         for (Asteroid a : copy) {
             if (a.shouldBeRemoved()) {
                 onAsteroidRemove(a);
                 continue;
             }
-            a.loop(projectionView, ship);
+            a.loop(ship);
             if (isDebugEnabled()) {
                 a.queueAabRender();
             }
         }
         
         AsteroidDebris[] debrisCopy = this.asteroidsDebris.toArray(AsteroidDebris[]::new);
-        for (AsteroidDebris a:debrisCopy) {
+        for (AsteroidDebris a : debrisCopy) {
             if (a.shouldBeRemoved()) {
                 this.asteroidsDebris.remove(a);
                 continue;
             }
             a.loop(projectionView);
         }
-        
+
         glBindVertexArray(0);
         glUseProgram(0);
     }

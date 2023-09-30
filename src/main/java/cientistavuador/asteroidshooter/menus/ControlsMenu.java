@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.menus;
 
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.shader.GUIProgram;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.text.GLFontRenderer;
 import cientistavuador.asteroidshooter.text.GLFontSpecifications;
@@ -157,14 +158,21 @@ public class ControlsMenu {
         };
 
         boolean hoverBack = backAab.testAab2D(mouse);
-
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
+        
+        GUIProgram.INSTANCE.use();
+        GUIProgram.INSTANCE.setProjectionView(projectionView);
+        GUIProgram.INSTANCE.setTextureUnit(0);
+        
+        glActiveTexture(GL_TEXTURE0);
+        
         glBindVertexArray(Geometries.GUI.getVAO());
 
-        GeometryProgram.sendUniforms(projectionView, ControlsMenu.controlsModel, Textures.CONTROLS);
+        GUIProgram.INSTANCE.setModel(ControlsMenu.controlsModel);
+        glBindTexture(GL_TEXTURE_2D, Textures.CONTROLS);
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-
-        GeometryProgram.sendUniforms(projectionView, ControlsMenu.backModel, (hoverBack ? Textures.BUTTON_HOVER : Textures.BUTTON));
+        
+        GUIProgram.INSTANCE.setModel(ControlsMenu.backModel);
+        glBindTexture(GL_TEXTURE_2D, (hoverBack ? Textures.BUTTON_HOVER : Textures.BUTTON));
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
         Main.NUMBER_OF_DRAWCALLS += 2;

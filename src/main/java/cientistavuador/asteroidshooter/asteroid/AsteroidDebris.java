@@ -29,7 +29,6 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
-import cientistavuador.asteroidshooter.texture.Textures;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11C.GL_TRIANGLES;
@@ -42,9 +41,9 @@ import static org.lwjgl.opengl.GL11C.glDrawElements;
  */
 public class AsteroidDebris {
 
-    public static final float DEBRIS_SPEED = 0.75f;
+    public static final float DEBRIS_SPEED = 0.50f;
     public static final float DEBRIS_RENDER_SCALE = 0.06f;
-    public static final float DEBRIS_FADE_TIME = 1f;
+    public static final float DEBRIS_FADE_TIME = 1.5f;
     
     private final AsteroidController asteroidController;
     private final Vector3f position = new Vector3f();
@@ -100,8 +99,11 @@ public class AsteroidDebris {
                     .rotateY(this.rotationY)
                     .rotateZ(this.rotationZ);
         }
+        
+        float opacity = this.fadeTime / DEBRIS_FADE_TIME;
+        GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, opacity);
 
-        GeometryProgram.sendUniforms(projectionView, this.model, Textures.STONE);
+        GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.ASTEROID.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
         Main.NUMBER_OF_DRAWCALLS++;

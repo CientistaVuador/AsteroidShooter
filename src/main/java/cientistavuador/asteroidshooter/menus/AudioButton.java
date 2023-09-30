@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.menus;
 
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.shader.GUIProgram;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
@@ -120,17 +121,21 @@ public class AudioButton {
             return;
         }
         
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
-        glBindVertexArray(Geometries.GUI.getVAO());
+        GUIProgram.INSTANCE.use();
+        GUIProgram.INSTANCE.setProjectionView(projectionView);
+        GUIProgram.INSTANCE.setModel(buttonModel);
+        GUIProgram.INSTANCE.setTextureUnit(0);
         
-        GeometryProgram.sendUniforms(projectionView, AudioButton.buttonModel, (this.audioEnabled ? Textures.AUDIO_ON : Textures.AUDIO_OFF));
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, (this.audioEnabled ? Textures.AUDIO_ON : Textures.AUDIO_OFF));
+        
+        glBindVertexArray(Geometries.GUI.getVAO());
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
         
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.GUI.getAmountOfIndices();
-        
-        glBindVertexArray(0);
-        glUseProgram(0);
         
         if (this.debugEnabled) {
             buttonAab.queueAabRender();

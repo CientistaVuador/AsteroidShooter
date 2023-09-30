@@ -29,16 +29,13 @@ package cientistavuador.asteroidshooter.shader;
 import cientistavuador.asteroidshooter.util.BetterUniformSetter;
 import cientistavuador.asteroidshooter.util.ProgramCompiler;
 import org.joml.Matrix4f;
-import org.joml.Vector4f;
-import org.joml.Vector4fc;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
  * @author Cien
  */
-public class GeometryProgram {
-    
+public class GUIProgram {
     public static final int SHADER_PROGRAM = ProgramCompiler.compile(
             """
             #version 330 core
@@ -68,7 +65,6 @@ public class GeometryProgram {
             """
             #version 330 core
             
-            uniform vec4 color;
             uniform sampler2D tex;
             
             in vec3 position;
@@ -78,23 +74,22 @@ public class GeometryProgram {
             layout (location = 0) out vec4 colorOutput;
             
             void main() {
-                colorOutput = texture(tex, uv) * color;
+                colorOutput = texture(tex, uv);
             }
             """
     );
     
     private static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM, 
-            "projectionView", "model", "color", "tex"
+            "projectionView", "model", "tex"
     );
     
-    public static final GeometryProgram INSTANCE = new GeometryProgram();
+    public static final GUIProgram INSTANCE = new GUIProgram();
     
     private final Matrix4f projectionView = new Matrix4f();
     private final Matrix4f model = new Matrix4f();
-    private final Vector4f color = new Vector4f();
     private int textureUnit = 0;
     
-    private GeometryProgram() {
+    private GUIProgram() {
         
     }
 
@@ -113,10 +108,6 @@ public class GeometryProgram {
     public int getTextureUnit() {
         return textureUnit;
     }
-
-    public Vector4fc getColor() {
-        return color;
-    }
     
     public void setProjectionView(Matrix4f projectionView) {
         this.projectionView.set(projectionView);
@@ -131,15 +122,6 @@ public class GeometryProgram {
     public void setTextureUnit(int unit) {
         this.textureUnit = unit;
         glUniform1i(UNIFORMS.locationOf("tex"), unit);
-    }
-    
-    public void setColor(float r, float g, float b, float a) {
-        this.color.set(r, g, b, a);
-        glUniform4f(UNIFORMS.locationOf("color"), r, g, b, a);
-    }
-    
-    public void setColor(Vector4fc color) {
-        setColor(color.x(), color.y(), color.z(), color.w());
     }
     
 }

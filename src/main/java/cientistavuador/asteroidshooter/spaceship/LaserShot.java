@@ -53,8 +53,9 @@ public class LaserShot implements Aab {
 
     public static final float LASER_SPEED = 2.5f;
     
-    public static final float LASER_MIN_DAMAGE = 25f;
-    public static final float LASER_MAX_DAMAGE = 60f;
+    public static final float LASER_MIN_DAMAGE = 10f;
+    public static final float LASER_MAX_DAMAGE = 20f;
+    public static final float LASER_MAX_DAMAGE_WITH_FALLOFF = 10000f;
 
     private final Spaceship spaceship;
     private final Vector3f position = new Vector3f();
@@ -115,12 +116,21 @@ public class LaserShot implements Aab {
         return damage;
     }
     
+    public float getDamageWithFalloff() {
+        float d = this.damage / this.position.distance(this.spaceship.getPosition());
+        if (Float.isInfinite(d) || Float.isNaN(d)) {
+            d = LASER_MAX_DAMAGE_WITH_FALLOFF;
+        }
+        d = Float.min(d, LASER_MAX_DAMAGE_WITH_FALLOFF);
+        return d;
+    }
+    
     public boolean shouldBeRemoved() {
         this.hitAsteroidOrScreen = !Spaceship.SCREEN_AAB.testAab2D(this) || this.hitAsteroidOrScreen;
         return this.hitAsteroidOrScreen;
     }
 
-    public void loop(Matrix4f projectionView, AsteroidController asteroids) {
+    public void loop(AsteroidController asteroids) {
         if (this.hitAsteroidOrScreen) {
             return;
         }
@@ -156,8 +166,8 @@ public class LaserShot implements Aab {
                 }
             }
         }
-
-        GeometryProgram.sendUniforms(projectionView, this.model, Textures.LASER);
+        
+        GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.LASER.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
         Main.NUMBER_OF_DRAWCALLS++;

@@ -28,6 +28,7 @@ package cientistavuador.asteroidshooter.menus;
 
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.shader.GUIProgram;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.text.GLFontRenderer;
 import cientistavuador.asteroidshooter.text.GLFontSpecifications;
@@ -71,7 +72,7 @@ public class MainMenu {
     private static final Matrix4f titleModel = new Matrix4f()
             .translate(0f, 0.70f, 2f)
             .scale(1.2f, 0.6f, 1f);
-    
+
     private static final Matrix4f playModel = new Matrix4f()
             .translate(0f, 0.2f, 2f)
             .scale(0.35f, 0.20f, 1f);
@@ -89,13 +90,13 @@ public class MainMenu {
 
     private static final String playText = "PLAY";
     private static final float playTextLineSize = GLFontRenderer.lineSize(GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE, playText);
-    
+
     private static final String controlsText = "CONTROLS";
     private static final float controlsTextLineSize = GLFontRenderer.lineSize(GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE, controlsText);
-    
+
     private static final String exitText = "EXIT";
     private static final float exitTextLineSize = GLFontRenderer.lineSize(GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE, exitText);
-    
+
     private boolean enabled = true;
 
     private boolean debugEnabled = false;
@@ -179,42 +180,51 @@ public class MainMenu {
                 max.set(this.max);
             }
         };
-        
+
         boolean hoverPlay = playAab.testAab2D(mouse);
         boolean hoverControls = controlsAab.testAab2D(mouse);
         boolean hoverExit = exitAab.testAab2D(mouse);
+
+        GUIProgram.INSTANCE.use();
+        GUIProgram.INSTANCE.setProjectionView(projectionView);
+        GUIProgram.INSTANCE.setTextureUnit(0);
+
+        glActiveTexture(GL_TEXTURE0);
         
-        glUseProgram(GeometryProgram.SHADER_PROGRAM);
         glBindVertexArray(Geometries.GUI.getVAO());
 
-        GeometryProgram.sendUniforms(projectionView, MainMenu.titleModel, Textures.TITLE);
-        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-
-        GeometryProgram.sendUniforms(projectionView, MainMenu.playModel, (hoverPlay ? Textures.BUTTON_HOVER : Textures.BUTTON));
-        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-
-        GeometryProgram.sendUniforms(projectionView, MainMenu.controlsModel, (hoverControls ? Textures.BUTTON_HOVER : Textures.BUTTON));
-        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-
-        GeometryProgram.sendUniforms(projectionView, MainMenu.exitModel, (hoverExit ? Textures.BUTTON_HOVER : Textures.BUTTON));
+        GUIProgram.INSTANCE.setModel(MainMenu.titleModel);
+        glBindTexture(GL_TEXTURE_2D, Textures.TITLE);
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
         
+        GUIProgram.INSTANCE.setModel(MainMenu.playModel);
+        glBindTexture(GL_TEXTURE_2D, (hoverPlay ? Textures.BUTTON_HOVER : Textures.BUTTON));
+        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+        
+        GUIProgram.INSTANCE.setModel(MainMenu.controlsModel);
+        glBindTexture(GL_TEXTURE_2D, (hoverControls ? Textures.BUTTON_HOVER : Textures.BUTTON));
+        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+
+        GUIProgram.INSTANCE.setModel(MainMenu.exitModel);
+        glBindTexture(GL_TEXTURE_2D, (hoverExit ? Textures.BUTTON_HOVER : Textures.BUTTON));
+        glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+
         Main.NUMBER_OF_DRAWCALLS += 3;
         Main.NUMBER_OF_VERTICES += (Geometries.GUI.getAmountOfIndices() * 3);
-        
+
         glBindVertexArray(0);
         glUseProgram(0);
-        
+
         float shadowXOffset = 0.005f;
         float shadowYOffset = -0.005f;
         GLFontRenderer.render(-(playTextLineSize * 0.5f) + shadowXOffset, 0.19f + shadowYOffset, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLACK, playText);
         GLFontRenderer.render(-(controlsTextLineSize * 0.5f) + shadowXOffset, -0.051f + shadowYOffset, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLACK, controlsText);
         GLFontRenderer.render(-(exitTextLineSize * 0.5f) + shadowXOffset, -0.30f + shadowYOffset, GLFontSpecifications.TEKTUR_REGULAR_0_06_BLACK, exitText);
-        
+
         GLFontRenderer.render(-(playTextLineSize * 0.5f), 0.19f, (hoverPlay ? GLFontSpecifications.TEKTUR_REGULAR_0_06_GOLD : GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE), playText);
         GLFontRenderer.render(-(controlsTextLineSize * 0.5f), -0.051f, (hoverControls ? GLFontSpecifications.TEKTUR_REGULAR_0_06_GOLD : GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE), controlsText);
         GLFontRenderer.render(-(exitTextLineSize * 0.5f), -0.30f, (hoverExit ? GLFontSpecifications.TEKTUR_REGULAR_0_06_GOLD : GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE), exitText);
-        
+
         if (this.debugEnabled) {
             MainMenu.playAab.queueAabRender();
             MainMenu.controlsAab.queueAabRender();
