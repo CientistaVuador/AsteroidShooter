@@ -31,7 +31,6 @@ import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
-import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;

@@ -78,7 +78,7 @@ public class AsteroidDebris {
         return this.fadeTime <= 0f;
     }
     
-    public void loop(Matrix4f projectionView) {
+    public void loop() {
         if (!this.frozen) {
             this.fadeTime -= Main.TPF;
             

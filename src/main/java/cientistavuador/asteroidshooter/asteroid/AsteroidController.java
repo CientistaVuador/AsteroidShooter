@@ -194,7 +194,7 @@ public class AsteroidController {
                 this.asteroidsDebris.remove(a);
                 continue;
             }
-            a.loop(projectionView);
+            a.loop();
         }
 
         glBindVertexArray(0);
