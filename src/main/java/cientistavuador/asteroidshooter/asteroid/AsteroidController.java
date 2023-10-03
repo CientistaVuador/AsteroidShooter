@@ -109,10 +109,12 @@ public class AsteroidController {
     public void setDebugEnabled(boolean debugEnabled) {
         this.debugEnabled = debugEnabled;
     }
-    
+
     public Asteroid spawnAsteroid(Spaceship ship, boolean deathAsteroid) {
-        //todo: fix death asteroid not spawning correctly
-        final float distance = 1.4f;
+        float distance = 1.4f;
+        if (deathAsteroid) {
+            distance = 5f;
+        }
 
         Asteroid asteroid = null;
 
@@ -122,7 +124,7 @@ public class AsteroidController {
             initialPosition
                     .set((Math.random() * 2f) - 1f, (Math.random() * 2f) - 1f, 0)
                     .normalize(distance);
-            
+
             if (deathAsteroid) {
                 finalPosition
                         .set(ship.getPosition())
@@ -137,7 +139,11 @@ public class AsteroidController {
                         .mul(distance);
             }
 
-            asteroid = new Asteroid(this, initialPosition, finalPosition);
+            if (deathAsteroid) {
+                asteroid = new DeathAsteroid(this, initialPosition, finalPosition);
+            } else {
+                asteroid = new Asteroid(this, initialPosition, finalPosition);
+            }
 
             boolean collision = false;
             for (Asteroid other : this.asteroids) {
@@ -156,47 +162,30 @@ public class AsteroidController {
         }
 
         asteroid.setFrozen(this.frozen);
-        if (deathAsteroid) {
-            asteroid.setSpeed(asteroid.getSpeed() * 3f);
-            asteroid.setRotationSpeed(asteroid.getRotationSpeed() * 16f);
-        }
         this.asteroids.add(asteroid);
         return asteroid;
     }
 
-    public void onAsteroidDestroyed(Asteroid e, Object cause, boolean criticalHit) {
-        if (this.audioEnabled) {
-            int sound = 0;
-            if (cause instanceof LaserShot) {
-                sound = Sounds.EXPLOSION.getAudioBuffer();
-            }
-            if (cause instanceof Asteroid) {
-                sound = Sounds.ROCK_HIT.getAudioBuffer();
-            }
-            if (sound != 0) {
-                int explosionAudio = alGenSources();
-                alSourcei(explosionAudio, AL_BUFFER, sound);
-                if (criticalHit) {
-                    alSourcef(explosionAudio, AL_PITCH, 0.75f);
-                }
-                alSource3f(explosionAudio, AL_POSITION, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
-                alSourcePlay(explosionAudio);
-                ALSourceUtil.deleteWhenStopped(explosionAudio, null);
-            }
+    public void createAsteroidExplosion(int debrisMultiplier, int audioBuffer, float pitch, float posX, float posY, float posZ) {
+        if (this.audioEnabled && audioBuffer != 0) {
+            int explosionAudio = alGenSources();
+            alSourcei(explosionAudio, AL_BUFFER, audioBuffer);
+            alSourcef(explosionAudio, AL_PITCH, pitch);
+            alSource3f(explosionAudio, AL_POSITION, posX, posY, posZ);
+            alSourcePlay(explosionAudio);
+            ALSourceUtil.deleteWhenStopped(explosionAudio, null);
         }
 
         int amountOfDebris = (int) Math.floor(MIN_AMOUNT_OF_DEBRIS + ((MAX_AMOUNT_OF_DEBRIS - MIN_AMOUNT_OF_DEBRIS) * Math.random()));
 
-        if (criticalHit) {
-            amountOfDebris *= 2;
-        }
+        amountOfDebris *= debrisMultiplier;
 
         for (int i = 0; i < amountOfDebris; i++) {
-            AsteroidDebris debris = new AsteroidDebris(this, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
+            AsteroidDebris debris = new AsteroidDebris(this, posX, posY, posZ);
             this.asteroidsDebris.add(debris);
         }
     }
-
+    
     public List<Asteroid> getAsteroids() {
         return asteroids;
     }
@@ -211,10 +200,16 @@ public class AsteroidController {
 
             if (DEATH_ZONE.testAab2D(ship)) {
                 this.deathAsteroidCounter += Main.TPF;
-                if (this.deathAsteroidCounter >= 1f) {
+                if (this.deathAsteroidCounter >= 2f) {
                     this.deathAsteroidCounter = 0f;
                     if (Math.random() <= 0.1f) {
                         spawnAsteroid(ship, true);
+                        if (this.audioEnabled) {
+                            int asteroidAlarm = alGenSources();
+                            alSourcei(asteroidAlarm, AL_BUFFER, Sounds.ALARM.getAudioBuffer());
+                            alSourcePlay(asteroidAlarm);
+                            ALSourceUtil.deleteWhenStopped(asteroidAlarm, null);
+                        }
                     }
                 }
             } else {

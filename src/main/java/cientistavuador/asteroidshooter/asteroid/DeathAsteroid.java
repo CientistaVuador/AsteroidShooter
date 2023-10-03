@@ -24,46 +24,27 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.sound;
+package cientistavuador.asteroidshooter.asteroid;
 
-import cientistavuador.asteroidshooter.resources.audio.NativeAudio;
+import org.joml.Vector3fc;
 
 /**
  *
  * @author Cien
  */
-public class Sounds {
+public class DeathAsteroid extends Asteroid {
     
-    public static final NativeAudio LASER;
-    public static final NativeAudio CLICK;
-    public static final NativeAudio HIT;
-    public static final NativeAudio EXPLOSION;
-    public static final NativeAudio ROCK_HIT;
-    public static final NativeAudio ALARM;
+    public static final float DEATH_ASTEROID_SPEED_MULTIPLIER = 0.6f;
+    public static final float DEATH_ASTEROID_ROTATION_SPEED_MULTIPLIER = 16f;
     
-    static {
-        NativeAudio[] sounds = SoundLoader.load(new String[] {
-            "laser.ogg",
-            "click.ogg",
-            "hit.ogg",
-            "explosion.ogg",
-            "rock_hit.ogg",
-            "alarm.ogg"
-        });
-        
-        LASER = sounds[0];
-        CLICK = sounds[1];
-        HIT = sounds[2];
-        EXPLOSION = sounds[3];
-        ROCK_HIT = sounds[4];
-        ALARM = sounds[5];
+    public DeathAsteroid(AsteroidController controller, Vector3fc initialPosition, Vector3fc finalPosition) {
+        super(controller, initialPosition, finalPosition);
+        this.speed = this.speed * DEATH_ASTEROID_SPEED_MULTIPLIER;
+        this.rotationSpeed = this.rotationSpeed * DEATH_ASTEROID_ROTATION_SPEED_MULTIPLIER;
     }
-    
-    public static void init() {
-        
-    }
-    
-    private Sounds() {
+
+    @Override
+    public void onAsteroidHitByAnotherAsteroid(Asteroid asteroid) {
         
     }
     

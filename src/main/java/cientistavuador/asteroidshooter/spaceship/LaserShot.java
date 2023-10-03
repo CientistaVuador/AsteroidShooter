@@ -90,8 +90,8 @@ public class LaserShot implements Aab {
         this.laserLight = GeometryProgram.INSTANCE.registerPointLight();
         if (this.laserLight != null) {
             this.laserLight.setPosition(position);
-            this.laserLight.setAmbient(0.0f, 0.004f, 0.0f);
-            this.laserLight.setDiffuse(0.0f, 0.010f, 0.0f);
+            this.laserLight.setAmbient(0.0f, 0.008f, 0.0f);
+            this.laserLight.setDiffuse(0.0f, 0.020f, 0.0f);
         }
     }
 

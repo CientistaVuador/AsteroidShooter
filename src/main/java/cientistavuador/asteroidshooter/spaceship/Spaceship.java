@@ -63,7 +63,7 @@ public class Spaceship implements Aab {
     public static final float SPACESHIP_WIDTH = 0.14f;
     public static final float SPACESHIP_HEIGHT = 0.14f;
 
-    public static final float SPACESHIP_SHOT_DELAY = 0.4f;
+    public static final float SPACESHIP_SHOT_DELAY = 0.3f;
 
     public static final float SPEED = 0.8f;
 

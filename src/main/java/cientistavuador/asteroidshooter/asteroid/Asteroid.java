@@ -29,6 +29,7 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.util.Aab;
@@ -46,13 +47,13 @@ public class Asteroid implements Aab {
     public static final float ASTEROID_RENDER_SCALE = 0.15f;
     public static final float ASTEROID_WIDTH = 0.12f;
     public static final float ASTEROID_HEIGHT = 0.12f;
-    public static final float ASTEROID_SPEED = 0.2f;
-    
+    public static final float ASTEROID_SPEED = 0.25f;
+
     public static final float ASTEROID_MIN_HEALTH = 90f;
     public static final float ASTEROID_MAX_HEALTH = 140f;
 
     public static final float ASTEROID_HIT_TIME = 0.2f;
-    
+
     private final AsteroidController controller;
     private final Matrix4f model = new Matrix4f();
 
@@ -65,15 +66,16 @@ public class Asteroid implements Aab {
     private float currentPosition = 0f;
 
     private final Vector3f position = new Vector3f();
-    
+
     private final float initialHealth = (float) (ASTEROID_MIN_HEALTH + ((ASTEROID_MAX_HEALTH - ASTEROID_MIN_HEALTH) * Math.random()));
     private float health = this.initialHealth;
-    
+
     private boolean frozen = false;
     private float hitTime = 0.0f;
-    private float speed = ASTEROID_SPEED;
-    private float rotationSpeed = 1f;
-    
+
+    protected float speed = ASTEROID_SPEED;
+    protected float rotationSpeed = 1f;
+
     protected Asteroid(AsteroidController controller, Vector3fc initialPosition, Vector3fc finalPosition) {
         this.initialPosition.set(initialPosition);
         this.finalPosition.set(finalPosition);
@@ -137,40 +139,59 @@ public class Asteroid implements Aab {
         return speed;
     }
 
-    public void setSpeed(float speed) {
-        this.speed = speed;
-    }
-
     public float getRotationSpeed() {
         return rotationSpeed;
     }
 
-    public void setRotationSpeed(float rotationSpeed) {
-        this.rotationSpeed = rotationSpeed;
-    }
-    
     public boolean shouldBeRemoved() {
         return this.currentPosition >= 1f || this.health <= 0f;
     }
 
     public void onLaserHit(LaserShot shot) {
+        if (this.health <= 0f) {
+            return;
+        }
         this.hitTime = ASTEROID_HIT_TIME;
-        
+
         float shotDamage = shot.getDamageWithFalloff();
         boolean criticalHit = shotDamage > this.initialHealth;
-        
+
         this.health -= shot.getDamageWithFalloff();
         if (this.health <= 0f) {
-            this.controller.onAsteroidDestroyed(this, shot, criticalHit);
+            this.onAsteroidDestroyed(shot, criticalHit);
         }
     }
-    
+
     public void onAsteroidHitByAnotherAsteroid(Asteroid asteroid) {
         if (this.health <= 0f) {
             return;
         }
         this.health = 0f;
-        this.controller.onAsteroidDestroyed(this, asteroid, false);
+        this.onAsteroidDestroyed(asteroid, false);
+    }
+
+    public void onAsteroidDestroyed(Object cause, boolean criticalLaserHit) {
+        boolean deathAsteroid = cause instanceof DeathAsteroid;
+        
+        float pitch = 1f;
+        if (deathAsteroid || criticalLaserHit) {
+            pitch = 0.75f;
+        }
+        
+        int debrisMultiplier = 1;
+        if (deathAsteroid) {
+            debrisMultiplier = 4;
+        }
+        if (criticalLaserHit) {
+            debrisMultiplier = 2;
+        }
+        
+        int audioBuffer = Sounds.ROCK_HIT.getAudioBuffer();
+        if (deathAsteroid || cause instanceof LaserShot) {
+            audioBuffer = Sounds.EXPLOSION.getAudioBuffer();
+        }
+        
+        this.controller.createAsteroidExplosion(debrisMultiplier, audioBuffer, pitch, this.position.x(), this.position.y(), this.position.z());
     }
 
     public void loop(Spaceship ship) {
@@ -193,12 +214,12 @@ public class Asteroid implements Aab {
                     .rotateX(this.rotationX)
                     .rotateY(this.rotationY)
                     .rotateZ(this.rotationZ);
-            
+
             if (ship.testAab2D(this)) {
                 ship.onAsteroidHit(this);
             }
-            
-            for (Asteroid s:this.controller.getAsteroids()) {
+
+            for (Asteroid s : this.controller.getAsteroids()) {
                 if (!s.equals(this) && s.testAab2D(this)) {
                     this.onAsteroidHitByAnotherAsteroid(this);
                     s.onAsteroidHitByAnotherAsteroid(this);
