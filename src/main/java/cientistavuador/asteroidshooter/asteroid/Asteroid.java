@@ -51,6 +51,8 @@ public class Asteroid implements Aab {
     public static final float ASTEROID_MIN_HEALTH = 90f;
     public static final float ASTEROID_MAX_HEALTH = 140f;
 
+    public static final float ASTEROID_HIT_TIME = 0.2f;
+    
     private final AsteroidController controller;
     private final Matrix4f model = new Matrix4f();
 
@@ -68,8 +70,14 @@ public class Asteroid implements Aab {
     private float health = this.initialHealth;
     
     private boolean frozen = false;
+    private float hitTime = 0.0f;
+    private float speed = ASTEROID_SPEED;
+    private float rotationSpeed = 1f;
     
-    protected Asteroid(AsteroidController controller) {
+    protected Asteroid(AsteroidController controller, Vector3fc initialPosition, Vector3fc finalPosition) {
+        this.initialPosition.set(initialPosition);
+        this.finalPosition.set(finalPosition);
+        this.position.set(initialPosition);
         this.controller = controller;
     }
 
@@ -85,11 +93,11 @@ public class Asteroid implements Aab {
         return controller;
     }
 
-    public Vector3f getInitialPosition() {
+    public Vector3fc getInitialPosition() {
         return initialPosition;
     }
 
-    public Vector3f getFinalPosition() {
+    public Vector3fc getFinalPosition() {
         return finalPosition;
     }
 
@@ -116,12 +124,38 @@ public class Asteroid implements Aab {
     public float getInitialHealth() {
         return initialHealth;
     }
+
+    public float getHitTime() {
+        return hitTime;
+    }
+
+    public void setHitTime(float hitTime) {
+        this.hitTime = hitTime;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    public float getRotationSpeed() {
+        return rotationSpeed;
+    }
+
+    public void setRotationSpeed(float rotationSpeed) {
+        this.rotationSpeed = rotationSpeed;
+    }
     
     public boolean shouldBeRemoved() {
         return this.currentPosition >= 1f || this.health <= 0f;
     }
 
     public void onLaserHit(LaserShot shot) {
+        this.hitTime = ASTEROID_HIT_TIME;
+        
         float shotDamage = shot.getDamageWithFalloff();
         boolean criticalHit = shotDamage > this.initialHealth;
         
@@ -141,14 +175,14 @@ public class Asteroid implements Aab {
 
     public void loop(Spaceship ship) {
         if (!this.frozen) {
-            this.currentPosition += (float) (ASTEROID_SPEED * Main.TPF);
+            this.currentPosition += (float) (Main.TPF * this.speed);
 
             float x = (this.initialPosition.x() * this.currentPosition) + (this.finalPosition.x() * (1f - this.currentPosition));
             float y = (this.initialPosition.y() * this.currentPosition) + (this.finalPosition.y() * (1f - this.currentPosition));
             float z = (this.initialPosition.z() * this.currentPosition) + (this.finalPosition.z() * (1f - this.currentPosition));
             this.position.set(x, y, z);
 
-            this.rotationZ += Main.TPF;
+            this.rotationZ += (Main.TPF * this.rotationSpeed);
             if (this.rotationZ > Math.PI * 2f) {
                 this.rotationZ = 0f;
             }
@@ -173,8 +207,19 @@ public class Asteroid implements Aab {
             }
         }
 
+        this.hitTime -= Main.TPF;
+        if (this.hitTime < 0f) {
+            this.hitTime = 0f;
+        }
+        float hitColor = this.hitTime / ASTEROID_HIT_TIME;
+        if (hitColor != 0) {
+            GeometryProgram.INSTANCE.setColor(1f, 1f - hitColor, 1f - hitColor, 1f);
+        }
         GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.ASTEROID.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+        if (hitColor != 0) {
+            GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
+        }
 
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.ASTEROID.getAmountOfIndices();

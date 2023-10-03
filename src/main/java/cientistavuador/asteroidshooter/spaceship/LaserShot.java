@@ -46,9 +46,9 @@ import static org.lwjgl.openal.AL11.*;
  */
 public class LaserShot implements Aab {
 
-    public static final float LASER_RENDER_SCALE = 0.025f;
-    public static final float LASER_WIDTH = 0.025f;
-    public static final float LASER_HEIGHT = 0.025f;
+    public static final float LASER_RENDER_SCALE = 0.030f;
+    public static final float LASER_WIDTH = 0.030f;
+    public static final float LASER_HEIGHT = 0.030f;
 
     public static final float LASER_SPEED = 2.5f;
     
@@ -63,6 +63,8 @@ public class LaserShot implements Aab {
     private final Matrix4f model = new Matrix4f();
 
     private final float damage = (float) (LASER_MIN_DAMAGE + ((LASER_MAX_DAMAGE - LASER_MIN_DAMAGE) * Math.random()));
+    
+    private final GeometryProgram.PointLight laserLight;
     
     private int laserShotAudioSource;
     private boolean hitAsteroidOrScreen = false;
@@ -84,6 +86,12 @@ public class LaserShot implements Aab {
             });
         } else {
             this.laserShotAudioSource = 0;
+        }
+        this.laserLight = GeometryProgram.INSTANCE.registerPointLight();
+        if (this.laserLight != null) {
+            this.laserLight.setPosition(position);
+            this.laserLight.setAmbient(0.0f, 0.004f, 0.0f);
+            this.laserLight.setDiffuse(0.0f, 0.010f, 0.0f);
         }
     }
 
@@ -124,6 +132,10 @@ public class LaserShot implements Aab {
         return d;
     }
     
+    public void onLaserRemoved() {
+        GeometryProgram.INSTANCE.unregisterPointLight(this.laserLight);
+    }
+    
     public boolean shouldBeRemoved() {
         this.hitAsteroidOrScreen = !Spaceship.SCREEN_AAB.testAab2D(this) || this.hitAsteroidOrScreen;
         return this.hitAsteroidOrScreen;
@@ -139,6 +151,10 @@ public class LaserShot implements Aab {
                     (float) (this.direction.y() * Main.TPF * LASER_SPEED),
                     (float) (this.direction.z() * Main.TPF * LASER_SPEED)
             );
+            
+            if (this.laserLight != null) {
+                this.laserLight.setPosition(this.position);
+            }
 
             if (this.laserShotAudioSource != 0) {
                 alSource3f(this.laserShotAudioSource, AL_VELOCITY, this.direction.x() * LASER_SPEED, this.direction.y() * LASER_SPEED, 0f);

@@ -26,6 +26,7 @@
  */
 package cientistavuador.asteroidshooter.asteroid;
 
+import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
@@ -33,6 +34,7 @@ import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
+import cientistavuador.asteroidshooter.util.Aab;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
@@ -48,12 +50,31 @@ public class AsteroidController {
 
     public static final int MIN_AMOUNT_OF_DEBRIS = 5;
     public static final int MAX_AMOUNT_OF_DEBRIS = 8;
+    public static final float ASTEROID_SPAWN_TIME = 0.5f;
+
+    public static final Aab DEATH_ZONE = new Aab() {
+
+        private final Vector3f min = new Vector3f(-0.5f, -0.5f, 0.0f);
+        private final Vector3f max = new Vector3f(0.5f, 0.5f, 0.0f);
+
+        @Override
+        public void getMin(Vector3f min) {
+            min.set(this.min);
+        }
+
+        @Override
+        public void getMax(Vector3f max) {
+            max.set(this.max);
+        }
+    };
 
     private final List<Asteroid> asteroids = new ArrayList<>();
     private final List<AsteroidDebris> asteroidsDebris = new ArrayList<>();
     private boolean debugEnabled = false;
     private boolean audioEnabled = true;
     private boolean frozen = false;
+    private float asteroidSpawnCounter = 0f;
+    private float deathAsteroidCounter = -10f;
 
     public AsteroidController() {
 
@@ -88,24 +109,35 @@ public class AsteroidController {
     public void setDebugEnabled(boolean debugEnabled) {
         this.debugEnabled = debugEnabled;
     }
-
-    public Asteroid spawnAsteroid() {
+    
+    public Asteroid spawnAsteroid(Spaceship ship, boolean deathAsteroid) {
+        //todo: fix death asteroid not spawning correctly
         final float distance = 1.4f;
-        Asteroid asteroid = new Asteroid(this);
 
+        Asteroid asteroid = null;
+
+        Vector3f initialPosition = new Vector3f();
+        Vector3f finalPosition = new Vector3f();
         for (int i = 0; i < 5; i++) {
-            Vector3f initialPosition = new Vector3f()
+            initialPosition
                     .set((Math.random() * 2f) - 1f, (Math.random() * 2f) - 1f, 0)
                     .normalize(distance);
-            Vector3f finalPosition = new Vector3f()
-                    .set(initialPosition)
-                    .negate()
-                    .normalize()
-                    .rotateZ((float) ((Math.random() - 0.5) * Math.PI))
-                    .mul(distance);
+            
+            if (deathAsteroid) {
+                finalPosition
+                        .set(ship.getPosition())
+                        .sub(initialPosition)
+                        .normalize(distance);
+            } else {
+                finalPosition
+                        .set(initialPosition)
+                        .negate()
+                        .normalize()
+                        .rotateZ((float) ((Math.random() - 0.5) * Math.PI))
+                        .mul(distance);
+            }
 
-            asteroid.getInitialPosition().set(initialPosition);
-            asteroid.getFinalPosition().set(finalPosition);
+            asteroid = new Asteroid(this, initialPosition, finalPosition);
 
             boolean collision = false;
             for (Asteroid other : this.asteroids) {
@@ -119,13 +151,17 @@ public class AsteroidController {
             }
         }
 
+        if (asteroid == null) {
+            throw new NullPointerException("Impossible NPE.");
+        }
+
         asteroid.setFrozen(this.frozen);
+        if (deathAsteroid) {
+            asteroid.setSpeed(asteroid.getSpeed() * 3f);
+            asteroid.setRotationSpeed(asteroid.getRotationSpeed() * 16f);
+        }
         this.asteroids.add(asteroid);
         return asteroid;
-    }
-
-    public void onAsteroidRemove(Asteroid e) {
-        this.asteroids.remove(e);
     }
 
     public void onAsteroidDestroyed(Asteroid e, Object cause, boolean criticalHit) {
@@ -150,11 +186,11 @@ public class AsteroidController {
         }
 
         int amountOfDebris = (int) Math.floor(MIN_AMOUNT_OF_DEBRIS + ((MAX_AMOUNT_OF_DEBRIS - MIN_AMOUNT_OF_DEBRIS) * Math.random()));
-        
+
         if (criticalHit) {
             amountOfDebris *= 2;
         }
-        
+
         for (int i = 0; i < amountOfDebris; i++) {
             AsteroidDebris debris = new AsteroidDebris(this, e.getPosition().x(), e.getPosition().y(), e.getPosition().z());
             this.asteroidsDebris.add(debris);
@@ -166,6 +202,30 @@ public class AsteroidController {
     }
 
     public void loop(Matrix4f projectionView, Spaceship ship) {
+        if (!this.frozen) {
+            this.asteroidSpawnCounter += Main.TPF;
+            if (this.asteroidSpawnCounter > 0.5f) {
+                spawnAsteroid(ship, false);
+                this.asteroidSpawnCounter = 0f;
+            }
+
+            if (DEATH_ZONE.testAab2D(ship)) {
+                this.deathAsteroidCounter += Main.TPF;
+                if (this.deathAsteroidCounter >= 1f) {
+                    this.deathAsteroidCounter = 0f;
+                    if (Math.random() <= 0.1f) {
+                        spawnAsteroid(ship, true);
+                    }
+                }
+            } else {
+                this.deathAsteroidCounter = 0f;
+            }
+        }
+
+        if (isDebugEnabled()) {
+            DEATH_ZONE.queueAabRender();
+        }
+
         GeometryProgram.INSTANCE.use();
         GeometryProgram.INSTANCE.setProjectionView(projectionView);
         GeometryProgram.INSTANCE.setTextureUnit(0);
@@ -179,7 +239,7 @@ public class AsteroidController {
         Asteroid[] copy = this.asteroids.toArray(Asteroid[]::new);
         for (Asteroid a : copy) {
             if (a.shouldBeRemoved()) {
-                onAsteroidRemove(a);
+                this.asteroids.remove(a);
                 continue;
             }
             a.loop(ship);
@@ -187,7 +247,7 @@ public class AsteroidController {
                 a.queueAabRender();
             }
         }
-        
+
         AsteroidDebris[] debrisCopy = this.asteroidsDebris.toArray(AsteroidDebris[]::new);
         for (AsteroidDebris a : debrisCopy) {
             if (a.shouldBeRemoved()) {

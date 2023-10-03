@@ -29,7 +29,6 @@ package cientistavuador.asteroidshooter.menus;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GUIProgram;
-import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;

@@ -26,23 +26,18 @@
  */
 package cientistavuador.asteroidshooter;
 
-import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.background.Background;
 import cientistavuador.asteroidshooter.camera.OrthoCamera;
-import cientistavuador.asteroidshooter.camera.PerspectiveCamera;
 import cientistavuador.asteroidshooter.debug.AabRender;
 import cientistavuador.asteroidshooter.menus.AudioButton;
 import cientistavuador.asteroidshooter.menus.ControlsMenu;
 import cientistavuador.asteroidshooter.menus.MainMenu;
+import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
-import cientistavuador.asteroidshooter.text.GLFontRenderer;
-import cientistavuador.asteroidshooter.text.GLFontSpecification;
-import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
-import cientistavuador.asteroidshooter.util.CursorShapes;
 import java.nio.FloatBuffer;
 import org.joml.Matrix4f;
 import static org.lwjgl.glfw.GLFW.*;
@@ -89,11 +84,21 @@ public class Game {
         this.camera.setFront(0f, 0f, -1f);
 
         this.controlsMenu.setEnabled(false);
+        
+        GeometryProgram.INSTANCE.use();
+        GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
+        GeometryProgram.INSTANCE.setLightingEnabled(true);
+        GeometryProgram.INSTANCE.setSunAmbient(0.2f, 0.2f, 0.2f);
+        GeometryProgram.INSTANCE.setSunDiffuse(0.8f, 0.8f, 0.8f);
+        GeometryProgram.INSTANCE.setSunDirection(-1f, -1f, -1f);
+        glUseProgram(0);
     }
 
-    float counter = 0f;
-
     public void loop() {
+        GeometryProgram.INSTANCE.use();
+        GeometryProgram.INSTANCE.updateLightsUniforms();
+        glUseProgram(0);
+        
         alListener3f(AL_POSITION, (float) this.camera.getPosition().x(), (float) this.camera.getPosition().y(), (float) this.camera.getPosition().z());
         try (MemoryStack stack = MemoryStack.stackPush()) {
             FloatBuffer buffer = stack.callocFloat(6);
@@ -112,18 +117,12 @@ public class Game {
         this.background.loop();
         
         if (this.spaceship != null) {
-            if (!this.controller.isFrozen()) {
-                this.counter += Main.TPF;
-                if (this.counter > 1f) {
-                    this.controller.spawnAsteroid();
-                    this.counter = 0f;
-                }
-            }
-
-            this.controller.loop(cameraMatrix, this.spaceship);
             this.spaceship.loop(cameraMatrix, this.controller);
+            this.controller.loop(cameraMatrix, this.spaceship);
             
             if (this.spaceship.shouldBeRemoved()) {
+                this.spaceship.onSpaceshipRemoved();
+                
                 this.spaceship = null;
                 this.controller = null;
                 
@@ -145,6 +144,9 @@ public class Game {
                 this.controller = new AsteroidController();
                 
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
+                
+                this.spaceship.setDebugEnabled(this.debugEnabled);
+                this.controller.setDebugEnabled(this.debugEnabled);
             }
 
             this.mainMenu.setEnabled(false);

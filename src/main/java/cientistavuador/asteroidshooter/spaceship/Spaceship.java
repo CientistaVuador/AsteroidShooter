@@ -108,6 +108,12 @@ public class Spaceship implements Aab {
             s.setFrozen(frozen);
         }
     }
+    
+    public void onSpaceshipRemoved() {
+        for (LaserShot s:this.laserShots) {
+            s.onLaserRemoved();
+        }
+    }
 
     public boolean shouldBeRemoved() {
         return this.dead;
@@ -204,6 +210,8 @@ public class Spaceship implements Aab {
         }
 
         GeometryProgram.INSTANCE.use();
+        GeometryProgram.INSTANCE.setLightingEnabled(false);
+        
         GeometryProgram.INSTANCE.setProjectionView(projectionView);
         GeometryProgram.INSTANCE.setTextureUnit(0);
         GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
@@ -217,6 +225,7 @@ public class Spaceship implements Aab {
         for (LaserShot s : copy) {
             if (s.shouldBeRemoved()) {
                 this.laserShots.remove(s);
+                s.onLaserRemoved();
                 continue;
             }
             s.loop(asteroids);
@@ -233,6 +242,7 @@ public class Spaceship implements Aab {
         glDrawElements(GL_TRIANGLES, Geometries.SPACESHIP.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         
+        GeometryProgram.INSTANCE.setLightingEnabled(true);
         glUseProgram(0);
 
         Main.NUMBER_OF_DRAWCALLS++;
