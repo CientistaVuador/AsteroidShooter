@@ -144,6 +144,7 @@ public class Game {
                 this.controller = new AsteroidController();
                 
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
+                this.controller.setAudioEnabled(this.audioButton.isAudioEnabled());
                 
                 this.spaceship.setDebugEnabled(this.debugEnabled);
                 this.controller.setDebugEnabled(this.debugEnabled);
