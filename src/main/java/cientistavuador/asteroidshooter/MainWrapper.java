@@ -26,6 +26,7 @@
  */
 package cientistavuador.asteroidshooter;
 
+import cientistavuador.asteroidshooter.natives.NativesExtractor;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -43,13 +44,31 @@ import static org.lwjgl.glfw.GLFW.glfwTerminate;
 public class MainWrapper {
 
     static {
+        System.out.println("  /$$$$$$  /$$        /$$$$$$  /$$");
+        System.out.println(" /$$__  $$| $$       /$$__  $$| $$");
+        System.out.println("| $$  \\ $$| $$      | $$  \\ $$| $$");
+        System.out.println("| $$  | $$| $$      | $$$$$$$$| $$");
+        System.out.println("| $$  | $$| $$      | $$__  $$|__/");
+        System.out.println("| $$  | $$| $$      | $$  | $$    ");
+        System.out.println("|  $$$$$$/| $$$$$$$$| $$  | $$ /$$");
+        System.out.println(" \\______/ |________/|__/  |__/|__/");
+        
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(MainWrapper.class.getName()).log(Level.WARNING, "Native Look and Feel not supported.", ex);
         }
+
+        String osName = System.getProperty("os.name");
+        System.out.println("Running on " + osName);
+        
+        if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+            NativesExtractor.extractLinux();
+        } else if (osName.contains("mac")) {
+            NativesExtractor.extractMacOS();
+        }
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -59,12 +78,12 @@ public class MainWrapper {
         } catch (Throwable e) {
             //GLPool.destroy();
             glfwTerminate();
-            
+
             ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
             PrintStream messageStream = new PrintStream(byteArray);
             e.printStackTrace(messageStream);
             messageStream.flush();
-            
+
             String message = new String(byteArray.toByteArray(), StandardCharsets.UTF_8);
             JOptionPane.showMessageDialog(
                     null,
@@ -75,5 +94,5 @@ public class MainWrapper {
             throw e;
         }
     }
-    
+
 }

@@ -207,11 +207,11 @@ public class GeometryProgram {
                 colorOutput = textureColor * color;
                 if (lightingEnabled) {
                     textureColor.rgb = pow(textureColor.rgb * color.rgb, vec3(gamma));
-                    vec3 output = vec3(0.0);
+                    vec3 resultOutput = vec3(0.0);
                     
                     //sun
-                    output += sunDiffuse * max(dot(normal, -sunDirection), 0.0) * textureColor.rgb;
-                    output += sunAmbient * textureColor.rgb;
+                    resultOutput += sunDiffuse * max(dot(normal, -sunDirection), 0.0) * textureColor.rgb;
+                    resultOutput += sunAmbient * textureColor.rgb;
                     
                     //point lights
                     for (int i = 0; i < MAX_AMOUNT_OF_LIGHTS; i++) {
@@ -221,12 +221,12 @@ public class GeometryProgram {
                             float distance = distance(light.position, position);
                             float attenuation = 1.0 / (distance*distance);
                             
-                            output += light.diffuse * max(dot(normal, lightDir), 0.0) * attenuation * textureColor.rgb;
-                            output += light.ambient * attenuation * textureColor.rgb;
+                            resultOutput += light.diffuse * max(dot(normal, lightDir), 0.0) * attenuation * textureColor.rgb;
+                            resultOutput += light.ambient * attenuation * textureColor.rgb;
                         }
                     }
                     
-                    colorOutput = vec4(pow(output, vec3(1.0/gamma)), textureColor.a * color.a);
+                    colorOutput = vec4(pow(resultOutput, vec3(1.0/gamma)), textureColor.a * color.a);
                 }
             }
             """,

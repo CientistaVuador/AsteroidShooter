@@ -48,7 +48,7 @@ public class AsteroidController {
 
     public static final int MIN_AMOUNT_OF_DEBRIS = 5;
     public static final int MAX_AMOUNT_OF_DEBRIS = 8;
-    public static final float ASTEROID_SPAWN_TIME = 0.5f;
+    public static final float ASTEROID_SPAWN_TIME = 0.35f;
 
     public static final Aab DEATH_ZONE = new Aab() {
 

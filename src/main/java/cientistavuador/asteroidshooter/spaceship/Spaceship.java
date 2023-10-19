@@ -72,7 +72,7 @@ public class Spaceship implements Aab {
     public static final float SPACESHIP_WIDTH = 0.12f;
     public static final float SPACESHIP_HEIGHT = 0.12f;
 
-    public static final float SPACESHIP_SHOT_DELAY = 0.3f;
+    public static final float SPACESHIP_SHOT_DELAY = 0.25f;
     public static final Vector2fc SPACESHIP_SHOT_LEFT_OFFSET = new Vector2f(-0.0225f, 0.09f);
     public static final Vector2fc SPACESHIP_SHOT_RIGHT_OFFSET = new Vector2f(0.0225f, 0.09f);
     public static final Vector2fc SPACESHIP_DEATH_ZONE_ALERT_OFFSET = new Vector2f(0f, -0.078f);

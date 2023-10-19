@@ -53,7 +53,7 @@ public class LaserShot implements Aab {
     public static final float LASER_SPEED = 2.5f;
     
     public static final float LASER_MIN_DAMAGE = 10f;
-    public static final float LASER_MAX_DAMAGE = 20f;
+    public static final float LASER_MAX_DAMAGE = 25f;
     public static final float LASER_MAX_DAMAGE_WITH_FALLOFF = 10000f;
 
     private final Spaceship spaceship;
