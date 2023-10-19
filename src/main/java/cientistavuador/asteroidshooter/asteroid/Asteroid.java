@@ -221,7 +221,7 @@ public class Asteroid implements Aab {
 
             for (Asteroid s : this.controller.getAsteroids()) {
                 if (!s.equals(this) && s.testAab2D(this)) {
-                    this.onAsteroidHitByAnotherAsteroid(this);
+                    this.onAsteroidHitByAnotherAsteroid(s);
                     s.onAsteroidHitByAnotherAsteroid(this);
                     break;
                 }

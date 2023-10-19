@@ -29,16 +29,25 @@ package cientistavuador.asteroidshooter.spaceship;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
+import cientistavuador.asteroidshooter.asteroid.DeathAsteroid;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.texture.Textures;
+import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
 import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector2fc;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.openal.AL10.AL_BUFFER;
+import static org.lwjgl.openal.AL10.alGenSources;
+import static org.lwjgl.openal.AL10.alSourcePlay;
+import static org.lwjgl.openal.AL10.alSourcei;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
@@ -58,12 +67,17 @@ public class Spaceship implements Aab {
             max.set(1f, 1f, 0f);
         }
     };
-    
-    public static final float SPACESHIP_RENDER_SCALE = 0.2f;
-    public static final float SPACESHIP_WIDTH = 0.14f;
-    public static final float SPACESHIP_HEIGHT = 0.14f;
+
+    public static final float SPACESHIP_RENDER_SCALE = 0.02f;
+    public static final float SPACESHIP_WIDTH = 0.12f;
+    public static final float SPACESHIP_HEIGHT = 0.12f;
 
     public static final float SPACESHIP_SHOT_DELAY = 0.3f;
+    public static final Vector2fc SPACESHIP_SHOT_LEFT_OFFSET = new Vector2f(-0.0225f, 0.09f);
+    public static final Vector2fc SPACESHIP_SHOT_RIGHT_OFFSET = new Vector2f(0.0225f, 0.09f);
+    public static final Vector2fc SPACESHIP_DEATH_ZONE_ALERT_OFFSET = new Vector2f(0f, -0.078f);
+    public static final Vector2fc SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET = new Vector2f(0f, -0.024f);
+    public static final float SPACESHIP_DEATH_ASTEROID_ALARM_TIME = 1f;
 
     public static final float SPEED = 0.8f;
 
@@ -75,14 +89,18 @@ public class Spaceship implements Aab {
 
     private float cursorX = 0f;
     private float cursorY = 0f;
-    
+
     private float rotation = 0f;
     private boolean debugEnabled = false;
     private float nextShot = 0f;
     private boolean frozen = false;
     private boolean dead = false;
     private boolean audioEnabled = true;
-    
+    private boolean shotLeft = false;
+    private GeometryProgram.PointLight deathZoneAlert = null;
+    private GeometryProgram.PointLight deathAsteroidAlarm = null;
+    private float deathAsteroidAlarmTime = 0.0f;
+
     public Spaceship() {
 
     }
@@ -93,7 +111,7 @@ public class Spaceship implements Aab {
 
     public void setAudioEnabled(boolean audioEnabled) {
         this.audioEnabled = audioEnabled;
-        for (LaserShot s:this.laserShots) {
+        for (LaserShot s : this.laserShots) {
             s.setAudioEnabled(audioEnabled);
         }
     }
@@ -104,25 +122,42 @@ public class Spaceship implements Aab {
 
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
-        for (LaserShot s:this.laserShots) {
+        for (LaserShot s : this.laserShots) {
             s.setFrozen(frozen);
         }
     }
-    
+
     public void onSpaceshipRemoved() {
-        for (LaserShot s:this.laserShots) {
+        for (LaserShot s : this.laserShots) {
             s.onLaserRemoved();
+        }
+        GeometryProgram.INSTANCE.unregisterPointLight(this.deathZoneAlert);
+        GeometryProgram.INSTANCE.unregisterPointLight(this.deathAsteroidAlarm);
+        this.deathZoneAlert = null;
+        this.deathAsteroidAlarm = null;
+    }
+
+    public void onDeathAsteroidIncoming(Asteroid asteroid) {
+        this.deathAsteroidAlarmTime = SPACESHIP_DEATH_ASTEROID_ALARM_TIME;
+        if (this.deathAsteroidAlarm == null) {
+            this.deathAsteroidAlarm = GeometryProgram.INSTANCE.registerPointLight();
+        }
+        if (this.audioEnabled) {
+            int asteroidAlarm = alGenSources();
+            alSourcei(asteroidAlarm, AL_BUFFER, Sounds.ALARM.getAudioBuffer());
+            alSourcePlay(asteroidAlarm);
+            ALSourceUtil.deleteWhenStopped(asteroidAlarm, null);
         }
     }
 
     public boolean shouldBeRemoved() {
         return this.dead;
     }
-    
+
     public boolean isDead() {
         return dead;
     }
-    
+
     public boolean isDebugEnabled() {
         return debugEnabled;
     }
@@ -142,15 +177,69 @@ public class Spaceship implements Aab {
     public List<LaserShot> getLaserShots() {
         return laserShots;
     }
-    
+
     public void onAsteroidHit(Asteroid s) {
         this.dead = true;
     }
 
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {
+        float scaleX = 1f;
+        float scaleY = 1f;
+
+        int windowWidth = Main.WIDTH;
+        int windowHeight = Main.HEIGHT;
+
+        if (windowWidth != windowHeight) {
+            if (windowWidth > windowHeight) {
+                scaleX = windowHeight / ((float) windowWidth);
+            } else {
+                scaleY = windowWidth / ((float) windowHeight);
+            }
+        }
+
+        if (this.testAab2D(AsteroidController.DEATH_ZONE)) {
+            if (this.deathZoneAlert == null) {
+                this.deathZoneAlert = GeometryProgram.INSTANCE.registerPointLight();
+                if (this.deathZoneAlert != null) {
+                    this.deathZoneAlert.setAmbient(0.0008f / 2f, 0.0008f / 2f, 0.0f);
+                    this.deathZoneAlert.setDiffuse(0.0020f / 2f, 0.0020f / 2f, 0.0f);
+                }
+            }
+            if (this.deathZoneAlert != null) {
+                Vector3f pos = new Vector3f()
+                        .set(SPACESHIP_DEATH_ZONE_ALERT_OFFSET.x(), SPACESHIP_DEATH_ZONE_ALERT_OFFSET.y(), 0.02f)
+                        .rotateZ(this.rotation)
+                        .add(this.position);
+                this.deathZoneAlert.setPosition(pos);
+            }
+        } else {
+            GeometryProgram.INSTANCE.unregisterPointLight(this.deathZoneAlert);
+            this.deathZoneAlert = null;
+        }
+
+        if (this.deathAsteroidAlarm != null) {
+            Vector3f pos = new Vector3f()
+                    .set(SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET.x(), SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET.y(), 0.02f)
+                    .rotateZ(this.rotation)
+                    .add(this.position);
+            this.deathAsteroidAlarm.setPosition(pos);
+        }
+
         if (!this.frozen) {
             if (this.nextShot > 0f) {
                 this.nextShot -= Main.TPF;
+            }
+
+            this.deathAsteroidAlarmTime -= Main.TPF;
+            if (this.deathAsteroidAlarmTime <= 0f) {
+                this.deathAsteroidAlarmTime = 0f;
+                GeometryProgram.INSTANCE.unregisterPointLight(this.deathAsteroidAlarm);
+                this.deathAsteroidAlarm = null;
+            }
+            if (this.deathAsteroidAlarm != null) {
+                float power = this.deathAsteroidAlarmTime / SPACESHIP_DEATH_ASTEROID_ALARM_TIME;
+                this.deathAsteroidAlarm.setAmbient(0.0032f * power, 0.0f, 0.0f);
+                this.deathAsteroidAlarm.setDiffuse(0.0080f * power, 0.0f, 0.0f);
             }
 
             float value = (float) (Main.TPF * SPEED);
@@ -178,7 +267,7 @@ public class Spaceship implements Aab {
                     this.position.add(-value, 0, 0);
                 }
             }
-            
+
             float cursorXPos = this.cursorX / Main.WIDTH;
             float cursorYPos = this.cursorY / Main.HEIGHT;
             cursorYPos = 1f - cursorYPos;
@@ -194,31 +283,56 @@ public class Spaceship implements Aab {
             this.model
                     .identity()
                     .translate(this.position)
-                    .scale(SPACESHIP_RENDER_SCALE)
-                    .rotateZ(this.rotation); 
-            
+                    .scale(SPACESHIP_RENDER_SCALE * scaleX, SPACESHIP_RENDER_SCALE * scaleY, SPACESHIP_RENDER_SCALE) //.rotateZ(this.rotation)
+                    .rotateZ(this.rotation);
+
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_SPACE) == GLFW_PRESS && this.nextShot <= 0f && !this.dead) {
+                Vector2fc shotSide;
+                if (this.shotLeft) {
+                    shotSide = SPACESHIP_SHOT_LEFT_OFFSET;
+                } else {
+                    shotSide = SPACESHIP_SHOT_RIGHT_OFFSET;
+                }
+                this.shotLeft = !this.shotLeft;
+
                 this.nextShot = SPACESHIP_SHOT_DELAY;
-                LaserShot shot = new LaserShot(this, this.position, this.direction, this.audioEnabled);
+                LaserShot shot = new LaserShot(this,
+                        new Vector3f()
+                                .add(shotSide.x(), shotSide.y(), 0f)
+                                .rotateZ(this.rotation)
+                                .mul(scaleX, scaleY, 1f)
+                                .add(this.position),
+                        this.direction,
+                        this.audioEnabled
+                );
                 shot.setFrozen(this.frozen);
                 this.laserShots.add(shot);
             }
-            
+
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_R) == GLFW_PRESS) {
                 this.dead = true;
             }
         }
 
         GeometryProgram.INSTANCE.use();
-        GeometryProgram.INSTANCE.setLightingEnabled(false);
-        
         GeometryProgram.INSTANCE.setProjectionView(projectionView);
         GeometryProgram.INSTANCE.setTextureUnit(0);
         GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        
+
+        //spaceship
+        GeometryProgram.INSTANCE.setLightingEnabled(true);
+        glBindVertexArray(Geometries.SPACESHIP.getVAO());
+        glBindTexture(GL_TEXTURE_2D, Textures.SPACESHIP);
+        GeometryProgram.INSTANCE.setModel(this.model);
+        glDrawElements(GL_TRIANGLES, Geometries.SPACESHIP.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        Main.NUMBER_OF_DRAWCALLS++;
+        Main.NUMBER_OF_VERTICES += Geometries.SPACESHIP.getAmountOfIndices();
+
         //laser shots
+        GeometryProgram.INSTANCE.setLightingEnabled(false);
         List<LaserShot> copy = new ArrayList<>(this.laserShots);
         glBindVertexArray(Geometries.LASER.getVAO());
         glBindTexture(GL_TEXTURE_2D, Textures.LASER);
@@ -235,18 +349,7 @@ public class Spaceship implements Aab {
         }
         glBindVertexArray(0);
 
-        //spaceship
-        glBindVertexArray(Geometries.SPACESHIP.getVAO());
-        glBindTexture(GL_TEXTURE_2D, Textures.SPACESHIP);
-        GeometryProgram.INSTANCE.setModel(this.model);
-        glDrawElements(GL_TRIANGLES, Geometries.SPACESHIP.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-        
-        GeometryProgram.INSTANCE.setLightingEnabled(true);
         glUseProgram(0);
-
-        Main.NUMBER_OF_DRAWCALLS++;
-        Main.NUMBER_OF_VERTICES += Geometries.SPACESHIP.getAmountOfIndices();
 
         if (this.debugEnabled) {
             this.queueAabRender();

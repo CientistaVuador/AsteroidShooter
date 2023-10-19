@@ -29,8 +29,6 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
-import cientistavuador.asteroidshooter.sound.Sounds;
-import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
@@ -54,8 +52,8 @@ public class AsteroidController {
 
     public static final Aab DEATH_ZONE = new Aab() {
 
-        private final Vector3f min = new Vector3f(-0.5f, -0.5f, 0.0f);
-        private final Vector3f max = new Vector3f(0.5f, 0.5f, 0.0f);
+        private final Vector3f min = new Vector3f(-0.45f, -0.45f, 0.0f);
+        private final Vector3f max = new Vector3f(0.45f, 0.45f, 0.0f);
 
         @Override
         public void getMin(Vector3f min) {
@@ -203,13 +201,7 @@ public class AsteroidController {
                 if (this.deathAsteroidCounter >= 2f) {
                     this.deathAsteroidCounter = 0f;
                     if (Math.random() <= 0.1f) {
-                        spawnAsteroid(ship, true);
-                        if (this.audioEnabled) {
-                            int asteroidAlarm = alGenSources();
-                            alSourcei(asteroidAlarm, AL_BUFFER, Sounds.ALARM.getAudioBuffer());
-                            alSourcePlay(asteroidAlarm);
-                            ALSourceUtil.deleteWhenStopped(asteroidAlarm, null);
-                        }
+                        ship.onDeathAsteroidIncoming(spawnAsteroid(ship, true));
                     }
                 }
             } else {
@@ -225,12 +217,13 @@ public class AsteroidController {
         GeometryProgram.INSTANCE.setProjectionView(projectionView);
         GeometryProgram.INSTANCE.setTextureUnit(0);
         GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
+        GeometryProgram.INSTANCE.setLightingEnabled(true);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, Textures.STONE);
 
         glBindVertexArray(Geometries.ASTEROID.getVAO());
-
+        
         Asteroid[] copy = this.asteroids.toArray(Asteroid[]::new);
         for (Asteroid a : copy) {
             if (a.shouldBeRemoved()) {
