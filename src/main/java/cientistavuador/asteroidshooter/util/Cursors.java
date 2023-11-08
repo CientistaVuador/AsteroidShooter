@@ -33,31 +33,73 @@ import static org.lwjgl.glfw.GLFW.*;
  *
  * @author Cien
  */
-public class CursorShapes {
-    
-    public static final long ARROW;
-    public static final long IBEAM;
+public class Cursors {
+
+    public static final boolean DEBUG_ENABLED = true;
+
     public static final long CROSSHAIR;
     public static final long HAND;
-    public static final long HRESIZE;
-    public static final long VRESIZE;
-    
+    public static final long ARROW;
+
     static {
-        System.out.println("Initializing cursor shapes...");
-        ARROW = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-        IBEAM = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+        if (DEBUG_ENABLED) {
+            System.out.println("Initializing cursor shapes...");
+        }
         CROSSHAIR = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
         HAND = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-        HRESIZE = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
-        VRESIZE = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-        System.out.println("Cursor shapes initialized.");
+        ARROW = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+        if (DEBUG_ENABLED) {
+            System.out.println("Cursor shapes initialized.");
+        }
     }
-    
+
     public static void init() {
-        
+
+    }
+
+    public static enum StandardCursor {
+        CROSSHAIR(Cursors.CROSSHAIR, 2),
+        HAND(Cursors.HAND, 1),
+        ARROW_DEFAULT_NONE(Cursors.ARROW, 0);
+
+        private final long cursorAddress;
+        private final int priority;
+
+        private StandardCursor(long cursorAddress, int priority) {
+            this.cursorAddress = cursorAddress;
+            this.priority = priority;
+        }
+
+        public long address() {
+            return this.cursorAddress;
+        }
+
+        public int priority() {
+            return this.priority;
+        }
     }
     
-    private CursorShapes() {
-        
+    private static StandardCursor currentCursor = StandardCursor.ARROW_DEFAULT_NONE;
+    private static StandardCursor nextCursor = StandardCursor.ARROW_DEFAULT_NONE;
+
+    public static void setCursor(StandardCursor cursor) {
+        if (cursor == null) {
+            cursor = StandardCursor.ARROW_DEFAULT_NONE;
+        }
+        if (cursor.priority() > nextCursor.priority()) {
+            nextCursor = cursor;
+        }
+    }
+    
+    public static void updateCursor() {
+        if (!currentCursor.equals(nextCursor)) {
+            currentCursor = nextCursor;
+            glfwSetCursor(Main.WINDOW_POINTER, currentCursor.address());
+        }
+        nextCursor = StandardCursor.ARROW_DEFAULT_NONE;
+    }
+
+    private Cursors() {
+
     }
 }

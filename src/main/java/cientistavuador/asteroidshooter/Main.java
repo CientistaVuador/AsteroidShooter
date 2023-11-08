@@ -33,7 +33,8 @@ import cientistavuador.asteroidshooter.text.GLFonts;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
-import cientistavuador.asteroidshooter.util.CursorShapes;
+import cientistavuador.asteroidshooter.util.Aab;
+import cientistavuador.asteroidshooter.util.Cursors;
 import java.io.PrintStream;
 import java.nio.DoubleBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -114,6 +115,18 @@ public class Main {
     public static int NUMBER_OF_VERTICES = 0;
     public static float MOUSE_X = 0f;
     public static float MOUSE_Y = 0f;
+    public static boolean EXIT_SIGNAL = false;
+    public static Aab MOUSE_AAB = new Aab() {
+        @Override
+        public void getMin(Vector3f min) {
+            min.set(Main.MOUSE_X, Main.MOUSE_Y, 0f);
+        }
+        
+        @Override
+        public void getMax(Vector3f max) {
+            getMin(max);
+        }
+    };
     public static final ConcurrentLinkedQueue<Runnable> MAIN_TASKS = new ConcurrentLinkedQueue<>();
     public static final Vector3f DEFAULT_CLEAR_COLOR = new Vector3f(0.2f, 0.4f, 0.6f);
     private static GLDebugMessageCallback DEBUG_CALLBACK = null;
@@ -270,13 +283,13 @@ public class Main {
         }
 
         Main.checkGLError();
-        
+
         GLFonts.init(); //static initialize
         Geometries.init(); //static initialize
         Textures.init(); //static initialize
         SoundSystem.init(); //static initialize
         Sounds.init(); //static initialize
-        CursorShapes.init(); //static initialize
+        Cursors.init(); //static initialize
         Game.get(); //static initialize
 
         Main.checkGLError();
@@ -326,7 +339,7 @@ public class Main {
                     System.out.println("[Spike Lag Warning] From " + Main.FPS + " FPS to " + tpfFps + " FPS; current frame TPF: " + String.format("%.3f", Main.TPF) + "s");
                 }
             }
-            
+
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 DoubleBuffer mouseX = stack.mallocDouble(1);
                 DoubleBuffer mouseY = stack.mallocDouble(1);
@@ -338,11 +351,11 @@ public class Main {
                 mY /= Main.HEIGHT;
                 mX = (mX * 2.0) - 1.0;
                 mY = (mY * 2.0) - 1.0;
-                
+
                 Main.MOUSE_X = (float) mX;
                 Main.MOUSE_Y = (float) mY;
             }
-            
+
             glfwPollEvents();
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -350,7 +363,7 @@ public class Main {
             while ((r = MAIN_TASKS.poll()) != null) {
                 r.run();
             }
-            
+
             ALSourceUtil.update();
 
             Game.get().loop();
@@ -384,6 +397,12 @@ public class Main {
             }
 
             Main.FRAME++;
+
+            if (Main.EXIT_SIGNAL) {
+                glfwMakeContextCurrent(0);
+                glfwDestroyWindow(Main.WINDOW_POINTER);
+                break;
+            }
         }
         if (DEBUG_CALLBACK != null) {
             DEBUG_CALLBACK.free();

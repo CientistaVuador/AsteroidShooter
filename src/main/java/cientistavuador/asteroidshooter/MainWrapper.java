@@ -27,6 +27,7 @@
 package cientistavuador.asteroidshooter;
 
 import cientistavuador.asteroidshooter.natives.NativesExtractor;
+import java.awt.Toolkit;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -83,7 +84,8 @@ public class MainWrapper {
             PrintStream messageStream = new PrintStream(byteArray);
             e.printStackTrace(messageStream);
             messageStream.flush();
-
+            
+            Toolkit.getDefaultToolkit().beep();
             String message = new String(byteArray.toByteArray(), StandardCharsets.UTF_8);
             JOptionPane.showMessageDialog(
                     null,

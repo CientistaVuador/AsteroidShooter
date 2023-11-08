@@ -29,14 +29,12 @@ package cientistavuador.asteroidshooter.spaceship;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.asteroid.Asteroid;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
-import cientistavuador.asteroidshooter.asteroid.DeathAsteroid;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
-import java.util.ArrayList;
 import java.util.List;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -85,7 +83,7 @@ public class Spaceship implements Aab {
     private final Vector3f position = new Vector3f();
     private final Vector3f direction = new Vector3f();
 
-    private final List<LaserShot> laserShots = new ArrayList<>();
+    private final SpaceshipController controller;
 
     private float cursorX = 0f;
     private float cursorY = 0f;
@@ -100,20 +98,21 @@ public class Spaceship implements Aab {
     private GeometryProgram.PointLight deathZoneAlert = null;
     private GeometryProgram.PointLight deathAsteroidAlarm = null;
     private float deathAsteroidAlarmTime = 0.0f;
-
-    public Spaceship() {
-
+    
+    public Spaceship(SpaceshipController controller) {
+        this.controller = controller;
     }
 
+    public SpaceshipController getController() {
+        return controller;
+    }
+    
     public boolean isAudioEnabled() {
         return audioEnabled;
     }
 
     public void setAudioEnabled(boolean audioEnabled) {
         this.audioEnabled = audioEnabled;
-        for (LaserShot s : this.laserShots) {
-            s.setAudioEnabled(audioEnabled);
-        }
     }
 
     public boolean isFrozen() {
@@ -122,15 +121,9 @@ public class Spaceship implements Aab {
 
     public void setFrozen(boolean frozen) {
         this.frozen = frozen;
-        for (LaserShot s : this.laserShots) {
-            s.setFrozen(frozen);
-        }
     }
 
     public void onSpaceshipRemoved() {
-        for (LaserShot s : this.laserShots) {
-            s.onLaserRemoved();
-        }
         GeometryProgram.INSTANCE.unregisterPointLight(this.deathZoneAlert);
         GeometryProgram.INSTANCE.unregisterPointLight(this.deathAsteroidAlarm);
         this.deathZoneAlert = null;
@@ -173,11 +166,7 @@ public class Spaceship implements Aab {
     public Vector3fc getDirection() {
         return direction;
     }
-
-    public List<LaserShot> getLaserShots() {
-        return laserShots;
-    }
-
+    
     public void onAsteroidHit(Asteroid s) {
         this.dead = true;
     }
@@ -306,7 +295,7 @@ public class Spaceship implements Aab {
                         this.audioEnabled
                 );
                 shot.setFrozen(this.frozen);
-                this.laserShots.add(shot);
+                this.controller.getLaserShots().add(shot);
             }
 
             if (glfwGetKey(Main.WINDOW_POINTER, GLFW_KEY_R) == GLFW_PRESS) {
@@ -314,14 +303,14 @@ public class Spaceship implements Aab {
             }
         }
 
+        //spaceship
         GeometryProgram.INSTANCE.use();
         GeometryProgram.INSTANCE.setProjectionView(projectionView);
         GeometryProgram.INSTANCE.setTextureUnit(0);
         GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
 
         glActiveTexture(GL_TEXTURE0);
-
-        //spaceship
+        
         GeometryProgram.INSTANCE.setLightingEnabled(true);
         glBindVertexArray(Geometries.SPACESHIP.getVAO());
         glBindTexture(GL_TEXTURE_2D, Textures.SPACESHIP);
@@ -330,24 +319,6 @@ public class Spaceship implements Aab {
         glBindVertexArray(0);
         Main.NUMBER_OF_DRAWCALLS++;
         Main.NUMBER_OF_VERTICES += Geometries.SPACESHIP.getAmountOfIndices();
-
-        //laser shots
-        GeometryProgram.INSTANCE.setLightingEnabled(false);
-        List<LaserShot> copy = new ArrayList<>(this.laserShots);
-        glBindVertexArray(Geometries.LASER.getVAO());
-        glBindTexture(GL_TEXTURE_2D, Textures.LASER);
-        for (LaserShot s : copy) {
-            if (s.shouldBeRemoved()) {
-                this.laserShots.remove(s);
-                s.onLaserRemoved();
-                continue;
-            }
-            s.loop(asteroids);
-            if (this.debugEnabled) {
-                s.queueAabRender();
-            }
-        }
-        glBindVertexArray(0);
 
         glUseProgram(0);
 

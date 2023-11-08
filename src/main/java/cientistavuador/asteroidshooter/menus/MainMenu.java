@@ -29,11 +29,11 @@ package cientistavuador.asteroidshooter.menus;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GUIProgram;
-import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.text.GLFontRenderer;
 import cientistavuador.asteroidshooter.text.GLFontSpecifications;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Aab;
+import cientistavuador.asteroidshooter.util.Cursors;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL33C.*;
@@ -161,46 +161,43 @@ public class MainMenu {
         this.exitSignal = true;
     }
 
+    public boolean isMouseHoveringPlayButton() {
+        return playAab.testAab2D(Main.MOUSE_AAB);
+    }
+
+    public boolean isMouseHoveringControlsButton() {
+        return controlsAab.testAab2D(Main.MOUSE_AAB);
+    }
+
+    public boolean isMouseHoveringExitButton() {
+        return exitAab.testAab2D(Main.MOUSE_AAB);
+    }
+
     public void loop(Matrix4f projectionView) {
         if (!this.enabled) {
             return;
         }
 
-        Aab mouse = new Aab() {
-            private final Vector3f min = new Vector3f(Main.MOUSE_X, Main.MOUSE_Y, 0f);
-            private final Vector3f max = min;
-
-            @Override
-            public void getMin(Vector3f min) {
-                min.set(this.min);
-            }
-
-            @Override
-            public void getMax(Vector3f max) {
-                max.set(this.max);
-            }
-        };
-
-        boolean hoverPlay = playAab.testAab2D(mouse);
-        boolean hoverControls = controlsAab.testAab2D(mouse);
-        boolean hoverExit = exitAab.testAab2D(mouse);
+        boolean hoverPlay = isMouseHoveringPlayButton();
+        boolean hoverControls = isMouseHoveringControlsButton();
+        boolean hoverExit = isMouseHoveringExitButton();
 
         GUIProgram.INSTANCE.use();
         GUIProgram.INSTANCE.setProjectionView(projectionView);
         GUIProgram.INSTANCE.setTextureUnit(0);
 
         glActiveTexture(GL_TEXTURE0);
-        
+
         glBindVertexArray(Geometries.GUI.getVAO());
 
         GUIProgram.INSTANCE.setModel(MainMenu.titleModel);
         glBindTexture(GL_TEXTURE_2D, Textures.TITLE);
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
+
         GUIProgram.INSTANCE.setModel(MainMenu.playModel);
         glBindTexture(GL_TEXTURE_2D, (hoverPlay ? Textures.BUTTON_HOVER : Textures.BUTTON));
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-        
+
         GUIProgram.INSTANCE.setModel(MainMenu.controlsModel);
         glBindTexture(GL_TEXTURE_2D, (hoverControls ? Textures.BUTTON_HOVER : Textures.BUTTON));
         glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
@@ -230,6 +227,10 @@ public class MainMenu {
             MainMenu.controlsAab.queueAabRender();
             MainMenu.exitAab.queueAabRender();
         }
+        
+        if (isMouseHoveringPlayButton() || isMouseHoveringControlsButton() || isMouseHoveringExitButton()) {
+            Cursors.setCursor(Cursors.StandardCursor.HAND);
+        }
     }
 
     public void mouseCallback(long window, int button, int action, int mods) {
@@ -238,28 +239,13 @@ public class MainMenu {
         }
 
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            Aab mouse = new Aab() {
-                private final Vector3f min = new Vector3f(Main.MOUSE_X, Main.MOUSE_Y, 0f);
-                private final Vector3f max = min;
-
-                @Override
-                public void getMin(Vector3f min) {
-                    min.set(this.min);
-                }
-
-                @Override
-                public void getMax(Vector3f max) {
-                    max.set(this.max);
-                }
-            };
-
-            if (MainMenu.playAab.testAab2D(mouse)) {
+            if (isMouseHoveringPlayButton()) {
                 this.playSignal = true;
             }
-            if (MainMenu.controlsAab.testAab2D(mouse)) {
+            if (isMouseHoveringControlsButton()) {
                 this.controlsSignal = true;
             }
-            if (MainMenu.exitAab.testAab2D(mouse)) {
+            if (isMouseHoveringExitButton()) {
                 this.exitSignal = true;
             }
         }

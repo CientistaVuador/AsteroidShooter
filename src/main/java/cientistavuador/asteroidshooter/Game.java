@@ -35,9 +35,10 @@ import cientistavuador.asteroidshooter.menus.ControlsMenu;
 import cientistavuador.asteroidshooter.menus.MainMenu;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
-import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
 import cientistavuador.asteroidshooter.ubo.CameraUBO;
 import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
+import cientistavuador.asteroidshooter.util.Cursors;
 import java.nio.FloatBuffer;
 import org.joml.Matrix4f;
 import static org.lwjgl.glfw.GLFW.*;
@@ -65,8 +66,8 @@ public class Game {
 
     private final int clickAudioSource;
     
-    private AsteroidController controller = null;
-    private Spaceship spaceship = null;
+    private AsteroidController asteroids = null;
+    private SpaceshipController spaceship = null;
     
     private boolean debugEnabled = false;
     
@@ -117,18 +118,8 @@ public class Game {
         this.background.loop();
         
         if (this.spaceship != null) {
-            this.spaceship.loop(cameraMatrix, this.controller);
-            this.controller.loop(cameraMatrix, this.spaceship);
-            
-            if (this.spaceship.shouldBeRemoved()) {
-                this.spaceship.onSpaceshipRemoved();
-                
-                this.spaceship = null;
-                this.controller = null;
-                
-                this.mainMenu.setEnabled(true);
-                this.audioButton.setEnabled(true);
-            }
+            this.spaceship.loop(cameraMatrix, this.asteroids);
+            this.asteroids.loop(cameraMatrix, this.spaceship);
         }
         
         //menu
@@ -140,20 +131,20 @@ public class Game {
         
         if (this.mainMenu.playPressedSignal()) {
             if (this.spaceship == null) {
-                this.spaceship = new Spaceship();
-                this.controller = new AsteroidController();
+                this.spaceship = new SpaceshipController();
+                this.asteroids = new AsteroidController();
                 
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
-                this.controller.setAudioEnabled(this.audioButton.isAudioEnabled());
+                this.asteroids.setAudioEnabled(this.audioButton.isAudioEnabled());
                 
                 this.spaceship.setDebugEnabled(this.debugEnabled);
-                this.controller.setDebugEnabled(this.debugEnabled);
+                this.asteroids.setDebugEnabled(this.debugEnabled);
             }
 
             this.mainMenu.setEnabled(false);
             this.audioButton.setEnabled(false);
 
-            this.controller.setFrozen(false);
+            this.asteroids.setFrozen(false);
             this.spaceship.setFrozen(false);
             
             buttonPressed = true;
@@ -167,7 +158,7 @@ public class Game {
         }
 
         if (this.mainMenu.exitPressedSignal()) {
-            System.exit(0);
+            Main.EXIT_SIGNAL = true;
         }
 
         if (this.controlsMenu.backButtonPressedSignal()) {
@@ -181,8 +172,8 @@ public class Game {
             if (this.spaceship != null) {
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
-            if (this.controller != null) {
-                this.controller.setAudioEnabled(this.audioButton.isAudioEnabled());
+            if (this.asteroids != null) {
+                this.asteroids.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
             buttonPressed = true;
         }
@@ -195,8 +186,9 @@ public class Game {
         }
         
         AabRender.renderQueue(camera);
-        
         Main.WINDOW_TITLE += " (DrawCalls: " + Main.NUMBER_OF_DRAWCALLS + ", Vertices: " + Main.NUMBER_OF_VERTICES + ")";
+        
+        Cursors.updateCursor();
     }
 
     public void mouseCursorMoved(double x, double y) {
@@ -216,8 +208,8 @@ public class Game {
             if (this.spaceship != null) {
                 this.spaceship.setDebugEnabled(this.debugEnabled);
             }
-            if (this.controller != null) {
-                this.controller.setDebugEnabled(this.debugEnabled);
+            if (this.asteroids != null) {
+                this.asteroids.setDebugEnabled(this.debugEnabled);
             }
             
             this.mainMenu.setDebugEnabled(this.debugEnabled);
@@ -241,7 +233,7 @@ public class Game {
             if (openMenu) {
                 this.mainMenu.setEnabled(true);
                 this.audioButton.setEnabled(true);
-                this.controller.setFrozen(true);
+                this.asteroids.setFrozen(true);
                 this.spaceship.setFrozen(true);
             }
         }

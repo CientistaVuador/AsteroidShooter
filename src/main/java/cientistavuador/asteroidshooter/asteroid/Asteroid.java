@@ -32,6 +32,7 @@ import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -194,7 +195,7 @@ public class Asteroid implements Aab {
         this.controller.createAsteroidExplosion(debrisMultiplier, audioBuffer, pitch, this.position.x(), this.position.y(), this.position.z());
     }
 
-    public void loop(Spaceship ship) {
+    public void loop(SpaceshipController spaceshipController) {
         if (!this.frozen) {
             this.currentPosition += (float) (Main.TPF * this.speed);
 
@@ -215,8 +216,8 @@ public class Asteroid implements Aab {
                     .rotateY(this.rotationY)
                     .rotateZ(this.rotationZ);
 
-            if (ship.testAab2D(this)) {
-                ship.onAsteroidHit(this);
+            if (spaceshipController.isSpaceshipAlive() && spaceshipController.getSpaceship().testAab2D(this)) {
+                spaceshipController.getSpaceship().onAsteroidHit(this);
             }
 
             for (Asteroid s : this.controller.getAsteroids()) {

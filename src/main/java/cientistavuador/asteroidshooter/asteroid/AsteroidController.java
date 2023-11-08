@@ -30,6 +30,7 @@ import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
+import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
@@ -188,20 +189,23 @@ public class AsteroidController {
         return asteroids;
     }
 
-    public void loop(Matrix4f projectionView, Spaceship ship) {
+    public void loop(Matrix4f projectionView, SpaceshipController controller) {
         if (!this.frozen) {
+            boolean spaceshipAlive = controller.isSpaceshipAlive();
+            Spaceship spaceship = controller.getSpaceship();
+            
             this.asteroidSpawnCounter += Main.TPF;
-            if (this.asteroidSpawnCounter > 0.5f) {
-                spawnAsteroid(ship, false);
+            if (spaceshipAlive && this.asteroidSpawnCounter > 0.5f) {
+                spawnAsteroid(spaceship, false);
                 this.asteroidSpawnCounter = 0f;
             }
 
-            if (DEATH_ZONE.testAab2D(ship)) {
+            if (spaceshipAlive && DEATH_ZONE.testAab2D(spaceship)) {
                 this.deathAsteroidCounter += Main.TPF;
                 if (this.deathAsteroidCounter >= 2f) {
                     this.deathAsteroidCounter = 0f;
                     if (Math.random() <= 0.1f) {
-                        ship.onDeathAsteroidIncoming(spawnAsteroid(ship, true));
+                        spaceship.onDeathAsteroidIncoming(spawnAsteroid(spaceship, true));
                     }
                 }
             } else {
@@ -230,7 +234,7 @@ public class AsteroidController {
                 this.asteroids.remove(a);
                 continue;
             }
-            a.loop(ship);
+            a.loop(controller);
             if (isDebugEnabled()) {
                 a.queueAabRender();
             }
