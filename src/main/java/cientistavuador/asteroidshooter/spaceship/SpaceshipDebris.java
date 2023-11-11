@@ -24,50 +24,12 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.sound;
-
-import cientistavuador.asteroidshooter.resources.audio.NativeAudio;
+package cientistavuador.asteroidshooter.spaceship;
 
 /**
  *
  * @author Cien
  */
-public class Sounds {
-    
-    public static final NativeAudio LASER;
-    public static final NativeAudio CLICK;
-    public static final NativeAudio HIT;
-    public static final NativeAudio EXPLOSION;
-    public static final NativeAudio ROCK_HIT;
-    public static final NativeAudio ALARM;
-    public static final NativeAudio PARTY_WHISTLE;
-    
-    static {
-        NativeAudio[] sounds = SoundLoader.load(new String[] {
-            "laser.ogg",
-            "click.ogg",
-            "hit.ogg",
-            "explosion.ogg",
-            "rock_hit.ogg",
-            "alarm.ogg",
-            "whistle.ogg"
-        });
-        
-        LASER = sounds[0];
-        CLICK = sounds[1];
-        HIT = sounds[2];
-        EXPLOSION = sounds[3];
-        ROCK_HIT = sounds[4];
-        ALARM = sounds[5];
-        PARTY_WHISTLE = sounds[6];
-    }
-    
-    public static void init() {
-        
-    }
-    
-    private Sounds() {
-        
-    }
+public class SpaceshipDebris {
     
 }

@@ -29,9 +29,7 @@ package cientistavuador.asteroidshooter.asteroid;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
-import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.LaserShot;
-import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
 import cientistavuador.asteroidshooter.util.Aab;
 import org.joml.Matrix4f;
@@ -159,7 +157,7 @@ public class Asteroid implements Aab {
 
         this.health -= shot.getDamageWithFalloff();
         if (this.health <= 0f) {
-            this.onAsteroidDestroyed(shot, criticalHit);
+            this.controller.onAsteroidDestroyed(this, shot, criticalHit);
         }
     }
 
@@ -168,31 +166,7 @@ public class Asteroid implements Aab {
             return;
         }
         this.health = 0f;
-        this.onAsteroidDestroyed(asteroid, false);
-    }
-
-    public void onAsteroidDestroyed(Object cause, boolean criticalLaserHit) {
-        boolean deathAsteroid = cause instanceof DeathAsteroid;
-        
-        float pitch = 1f;
-        if (deathAsteroid || criticalLaserHit) {
-            pitch = 0.75f;
-        }
-        
-        int debrisMultiplier = 1;
-        if (deathAsteroid) {
-            debrisMultiplier = 4;
-        }
-        if (criticalLaserHit) {
-            debrisMultiplier = 2;
-        }
-        
-        int audioBuffer = Sounds.ROCK_HIT.getAudioBuffer();
-        if (deathAsteroid || cause instanceof LaserShot) {
-            audioBuffer = Sounds.EXPLOSION.getAudioBuffer();
-        }
-        
-        this.controller.createAsteroidExplosion(debrisMultiplier, audioBuffer, pitch, this.position.x(), this.position.y(), this.position.z());
+        this.controller.onAsteroidDestroyed(this, asteroid, false);
     }
 
     public void loop(SpaceshipController spaceshipController) {

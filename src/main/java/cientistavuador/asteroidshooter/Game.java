@@ -33,6 +33,7 @@ import cientistavuador.asteroidshooter.debug.AabRender;
 import cientistavuador.asteroidshooter.menus.AudioButton;
 import cientistavuador.asteroidshooter.menus.ControlsMenu;
 import cientistavuador.asteroidshooter.menus.MainMenu;
+import cientistavuador.asteroidshooter.menus.Score;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.sound.Sounds;
 import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
@@ -63,6 +64,7 @@ public class Game {
     private final AudioButton audioButton = new AudioButton();
     private final ControlsMenu controlsMenu = new ControlsMenu();
     private final Background background = new Background();
+    private final Score score = new Score();
 
     private final int clickAudioSource;
     
@@ -126,13 +128,14 @@ public class Game {
         this.mainMenu.loop(cameraMatrix);
         this.audioButton.loop(cameraMatrix);
         this.controlsMenu.loop(cameraMatrix);
+        this.score.loop(cameraMatrix);
         
         boolean buttonPressed = false;
         
         if (this.mainMenu.playPressedSignal()) {
             if (this.spaceship == null) {
-                this.spaceship = new SpaceshipController();
-                this.asteroids = new AsteroidController();
+                this.spaceship = new SpaceshipController(this.score);
+                this.asteroids = new AsteroidController(this.score);
                 
                 this.spaceship.setAudioEnabled(this.audioButton.isAudioEnabled());
                 this.asteroids.setAudioEnabled(this.audioButton.isAudioEnabled());
@@ -175,6 +178,7 @@ public class Game {
             if (this.asteroids != null) {
                 this.asteroids.setAudioEnabled(this.audioButton.isAudioEnabled());
             }
+            this.score.setAudioEnabled(this.audioButton.isAudioEnabled());
             buttonPressed = true;
         }
         

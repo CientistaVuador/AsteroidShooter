@@ -43,13 +43,13 @@ public class Cursors {
 
     static {
         if (DEBUG_ENABLED) {
-            System.out.println("Initializing cursor shapes...");
+            System.out.println("Initializing cursors...");
         }
         CROSSHAIR = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
         HAND = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
         ARROW = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
         if (DEBUG_ENABLED) {
-            System.out.println("Cursor shapes initialized.");
+            System.out.println("Cursors initialized.");
         }
     }
 

@@ -29,6 +29,7 @@ package cientistavuador.asteroidshooter.spaceship;
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.asteroid.AsteroidController;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.menus.Score;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
 import cientistavuador.asteroidshooter.util.Cursors;
@@ -51,9 +52,10 @@ public class SpaceshipController {
     private boolean debugEnabled = false;
     private boolean frozen = false;
     private float spawnDelayCounter = 0f;
-
-    public SpaceshipController() {
-
+    private final Score score;
+    
+    public SpaceshipController(Score score) {
+        this.score = score;
     }
     
     private void createSpaceship() {
@@ -63,6 +65,10 @@ public class SpaceshipController {
         this.spaceship.setFrozen(this.frozen);
     }
 
+    public Score getScore() {
+        return score;
+    }
+    
     public boolean isAudioEnabled() {
         return audioEnabled;
     }

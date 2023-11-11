@@ -28,7 +28,10 @@ package cientistavuador.asteroidshooter.asteroid;
 
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
+import cientistavuador.asteroidshooter.menus.Score;
 import cientistavuador.asteroidshooter.shader.GeometryProgram;
+import cientistavuador.asteroidshooter.sound.Sounds;
+import cientistavuador.asteroidshooter.spaceship.LaserShot;
 import cientistavuador.asteroidshooter.spaceship.Spaceship;
 import cientistavuador.asteroidshooter.spaceship.SpaceshipController;
 import cientistavuador.asteroidshooter.texture.Textures;
@@ -74,11 +77,16 @@ public class AsteroidController {
     private boolean frozen = false;
     private float asteroidSpawnCounter = 0f;
     private float deathAsteroidCounter = -10f;
+    private final Score score;
 
-    public AsteroidController() {
-
+    public AsteroidController(Score score) {
+        this.score = score;
     }
 
+    public Score getScore() {
+        return score;
+    }
+    
     public boolean isFrozen() {
         return frozen;
     }
@@ -163,6 +171,33 @@ public class AsteroidController {
         asteroid.setFrozen(this.frozen);
         this.asteroids.add(asteroid);
         return asteroid;
+    }
+    
+    public void onAsteroidDestroyed(Asteroid asteroid, Object cause, boolean criticalLaserHit) {
+        boolean deathAsteroid = cause instanceof DeathAsteroid;
+        
+        float pitch = 1f;
+        if (deathAsteroid || criticalLaserHit) {
+            pitch = 0.75f;
+        }
+        
+        int debrisMultiplier = 1;
+        if (deathAsteroid) {
+            debrisMultiplier = 4;
+        }
+        if (criticalLaserHit) {
+            debrisMultiplier = 2;
+        }
+        
+        int audioBuffer = Sounds.ROCK_HIT.getAudioBuffer();
+        if (deathAsteroid || cause instanceof LaserShot) {
+            audioBuffer = Sounds.EXPLOSION.getAudioBuffer();
+        }
+        
+        createAsteroidExplosion(debrisMultiplier, audioBuffer, pitch, asteroid.getPosition().x(), asteroid.getPosition().y(), asteroid.getPosition().z());
+        if (cause instanceof LaserShot) {
+            this.score.onAsteroidDestroyedBySpaceship(asteroid, criticalLaserHit);
+        }
     }
 
     public void createAsteroidExplosion(int debrisMultiplier, int audioBuffer, float pitch, float posX, float posY, float posZ) {
