@@ -63,7 +63,7 @@ public class Main {
     static {
         org.lwjgl.system.Configuration.LIBRARY_PATH.set("natives");
     }
-
+    
     public static class OpenGLErrorException extends RuntimeException {
 
         private static final long serialVersionUID = 1L;

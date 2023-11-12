@@ -94,18 +94,27 @@ public class Spaceship implements Aab {
     private boolean dead = false;
     private boolean audioEnabled = true;
     private boolean shotLeft = false;
-    private GeometryProgram.PointLight deathZoneAlert = null;
-    private GeometryProgram.PointLight deathAsteroidAlarm = null;
+    private final GeometryProgram.PointLight deathZoneAlert = new GeometryProgram.PointLight();
+    private final GeometryProgram.PointLight deathAsteroidAlarm = new GeometryProgram.PointLight();
     private float deathAsteroidAlarmTime = 0.0f;
-    
+
     public Spaceship(SpaceshipController controller) {
         this.controller = controller;
+
+        this.deathZoneAlert.setEnabled(false);
+        this.deathZoneAlert.setAmbient(0.0008f / 2f, 0.0008f / 2f, 0.0f);
+        this.deathZoneAlert.setDiffuse(0.0020f / 2f, 0.0020f / 2f, 0.0f);
+
+        this.deathAsteroidAlarm.setEnabled(false);
+
+        GeometryProgram.INSTANCE.getLights().add(this.deathZoneAlert);
+        GeometryProgram.INSTANCE.getLights().add(this.deathAsteroidAlarm);
     }
 
     public SpaceshipController getController() {
         return controller;
     }
-    
+
     public boolean isAudioEnabled() {
         return audioEnabled;
     }
@@ -123,17 +132,13 @@ public class Spaceship implements Aab {
     }
 
     public void onSpaceshipRemoved() {
-        GeometryProgram.INSTANCE.unregisterPointLight(this.deathZoneAlert);
-        GeometryProgram.INSTANCE.unregisterPointLight(this.deathAsteroidAlarm);
-        this.deathZoneAlert = null;
-        this.deathAsteroidAlarm = null;
+        GeometryProgram.INSTANCE.getLights().remove(this.deathZoneAlert);
+        GeometryProgram.INSTANCE.getLights().remove(this.deathAsteroidAlarm);
     }
 
     public void onDeathAsteroidIncoming(Asteroid asteroid) {
         this.deathAsteroidAlarmTime = SPACESHIP_DEATH_ASTEROID_ALARM_TIME;
-        if (this.deathAsteroidAlarm == null) {
-            this.deathAsteroidAlarm = GeometryProgram.INSTANCE.registerPointLight();
-        }
+        this.deathAsteroidAlarm.setEnabled(true);
         if (this.audioEnabled) {
             int asteroidAlarm = alGenSources();
             alSourcei(asteroidAlarm, AL_BUFFER, Sounds.ALARM.getAudioBuffer());
@@ -165,7 +170,7 @@ public class Spaceship implements Aab {
     public Vector3fc getDirection() {
         return direction;
     }
-    
+
     public void onAsteroidHit(Asteroid s) {
         this.dead = true;
     }
@@ -186,33 +191,24 @@ public class Spaceship implements Aab {
         }
 
         if (this.testAab2D(AsteroidController.DEATH_ZONE)) {
-            if (this.deathZoneAlert == null) {
-                this.deathZoneAlert = GeometryProgram.INSTANCE.registerPointLight();
-                if (this.deathZoneAlert != null) {
-                    this.deathZoneAlert.setAmbient(0.0008f / 2f, 0.0008f / 2f, 0.0f);
-                    this.deathZoneAlert.setDiffuse(0.0020f / 2f, 0.0020f / 2f, 0.0f);
-                }
-            }
-            if (this.deathZoneAlert != null) {
-                Vector3f pos = new Vector3f()
-                        .set(SPACESHIP_DEATH_ZONE_ALERT_OFFSET.x(), SPACESHIP_DEATH_ZONE_ALERT_OFFSET.y(), 0.02f)
-                        .rotateZ(this.rotation)
-                        .add(this.position);
-                this.deathZoneAlert.setPosition(pos);
-            }
+            this.deathZoneAlert.setEnabled(true);
+            Vector3f pos = new Vector3f()
+                    .set(SPACESHIP_DEATH_ZONE_ALERT_OFFSET.x(), SPACESHIP_DEATH_ZONE_ALERT_OFFSET.y(), 0.02f)
+                    .rotateZ(this.rotation)
+                    .add(this.position);
+            this.deathZoneAlert.setPosition(pos);
         } else {
-            GeometryProgram.INSTANCE.unregisterPointLight(this.deathZoneAlert);
-            this.deathZoneAlert = null;
+            this.deathZoneAlert.setEnabled(false);
         }
-
-        if (this.deathAsteroidAlarm != null) {
+        
+        if (this.deathAsteroidAlarm.isEnabled()) {
             Vector3f pos = new Vector3f()
                     .set(SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET.x(), SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET.y(), 0.02f)
                     .rotateZ(this.rotation)
                     .add(this.position);
             this.deathAsteroidAlarm.setPosition(pos);
         }
-
+        
         if (!this.frozen) {
             if (this.nextShot > 0f) {
                 this.nextShot -= Main.TPF;
@@ -221,10 +217,9 @@ public class Spaceship implements Aab {
             this.deathAsteroidAlarmTime -= Main.TPF;
             if (this.deathAsteroidAlarmTime <= 0f) {
                 this.deathAsteroidAlarmTime = 0f;
-                GeometryProgram.INSTANCE.unregisterPointLight(this.deathAsteroidAlarm);
-                this.deathAsteroidAlarm = null;
+                this.deathAsteroidAlarm.setEnabled(false);
             }
-            if (this.deathAsteroidAlarm != null) {
+            if (this.deathAsteroidAlarm.isEnabled()) {
                 float power = this.deathAsteroidAlarmTime / SPACESHIP_DEATH_ASTEROID_ALARM_TIME;
                 this.deathAsteroidAlarm.setAmbient(0.0032f * power, 0.0f, 0.0f);
                 this.deathAsteroidAlarm.setDiffuse(0.0080f * power, 0.0f, 0.0f);
@@ -309,7 +304,7 @@ public class Spaceship implements Aab {
         GeometryProgram.INSTANCE.setColor(1f, 1f, 1f, 1f);
 
         glActiveTexture(GL_TEXTURE0);
-        
+
         GeometryProgram.INSTANCE.setLightingEnabled(true);
         glBindVertexArray(Geometries.SPACESHIP.getVAO());
         glBindTexture(GL_TEXTURE_2D, Textures.SPACESHIP);

@@ -28,7 +28,9 @@ package cientistavuador.asteroidshooter.shader;
 
 import cientistavuador.asteroidshooter.util.BetterUniformSetter;
 import cientistavuador.asteroidshooter.util.ProgramCompiler;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import org.joml.Matrix3f;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
@@ -47,53 +49,32 @@ public class GeometryProgram {
     
     public static final int MAX_AMOUNT_OF_LIGHTS = 8;
     
-    public static final class PointLight {
+    public static class PointLight {
         
-        private final int index;
+        private boolean enabled = true;
         
-        private boolean enabled = false;
         private final Vector3f position = new Vector3f();
-        private final Vector3f ambient = new Vector3f();
-        private final Vector3f diffuse = new Vector3f();
+        private final Vector3f ambient = new Vector3f(0.2f, 0.2f, 0.2f);
+        private final Vector3f diffuse = new Vector3f(0.8f, 0.8f, 0.8f);
         
-        private final int enabledLocation;
-        private final int positionLocation;
-        private final int ambientLocation;
-        private final int diffuseLocation;
-        
-        private boolean enabledRequiresUpdate = false;
-        private boolean positionRequiresUpdate = false;
-        private boolean ambientRequiresUpdate = false;
-        private boolean diffuseRequiresUpdate = false;
-        
-        protected PointLight(int index) {
-            this.index = index;
-            this.enabledLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].enabled");
-            this.positionLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].position");
-            this.ambientLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].ambient");
-            this.diffuseLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].diffuse");
+        public PointLight() {
+            
         }
 
-        protected int getIndex() {
-            return index;
-        }
-
-        protected boolean isEnabled() {
+        public boolean isEnabled() {
             return enabled;
         }
-
-        protected void setEnabled(boolean enabled) {
+        
+        public void setEnabled(boolean enabled) {
             this.enabled = enabled;
-            this.enabledRequiresUpdate = true;
         }
-
+        
         public Vector3fc getPosition() {
             return position;
         }
         
         public void setPosition(float x, float y, float z) {
             this.position.set(x, y, z);
-            this.positionRequiresUpdate = true;
         }
         
         public void setPosition(Vector3fc position) {
@@ -106,7 +87,6 @@ public class GeometryProgram {
         
         public void setAmbient(float r, float g, float b) {
             this.ambient.set(r, g, b);
-            this.ambientRequiresUpdate = true;
         }
         
         public void setAmbient(Vector3fc ambient) {
@@ -119,28 +99,90 @@ public class GeometryProgram {
         
         public void setDiffuse(float r, float g, float b) {
             this.diffuse.set(r, g, b);
-            this.diffuseRequiresUpdate = true;
         }
         
         public void setDiffuse(Vector3fc diffuse) {
             setDiffuse(diffuse.x(), diffuse.y(), diffuse.z());
         }
         
-        protected void updateUniforms() {
+    }
+    
+    private static class PointLightUniforms extends PointLight {
+        
+        private final int index;
+        
+        private final int enabledLocation;
+        private final int positionLocation;
+        private final int ambientLocation;
+        private final int diffuseLocation;
+        
+        private boolean enabledRequiresUpdate = false;
+        private boolean positionRequiresUpdate = false;
+        private boolean ambientRequiresUpdate = false;
+        private boolean diffuseRequiresUpdate = false;
+        
+        public PointLightUniforms(int index) {
+            this.index = index;
+            this.enabledLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].enabled");
+            this.positionLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].position");
+            this.ambientLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].ambient");
+            this.diffuseLocation = glGetUniformLocation(SHADER_PROGRAM, "lights["+index+"].diffuse");
+        }
+
+        public int getIndex() {
+            return index;
+        }
+        
+        @Override
+        public void setEnabled(boolean enabled) {
+            if (isEnabled() != enabled) {
+                this.enabledRequiresUpdate = true;
+            }
+            super.setEnabled(enabled);
+        }
+
+        @Override
+        public void setPosition(float x, float y, float z) {
+            if (!getPosition().equals(x, y, z)) {
+                this.positionRequiresUpdate = true;
+            }
+            super.setPosition(x, y, z);
+        }
+        
+        @Override
+        public void setAmbient(float r, float g, float b) {
+            if (!getAmbient().equals(r, g, b)) {
+                this.ambientRequiresUpdate = true;
+            }
+            super.setAmbient(r, g, b);
+        }
+        
+        @Override
+        public void setDiffuse(float r, float g, float b) {
+            if (!getDiffuse().equals(r, g, b)) {
+                this.diffuseRequiresUpdate = true;
+            }
+            super.setDiffuse(r, g, b);
+        }
+        
+        public void updateUniforms() {
             if (this.enabledRequiresUpdate) {
-                glUniform1i(this.enabledLocation, (this.enabled ? 1 : 0));
+                glUniform1i(this.enabledLocation, (isEnabled() ? 1 : 0));
                 this.enabledRequiresUpdate = false;
             }
             if (this.positionRequiresUpdate) {
-                glUniform3f(this.positionLocation, this.position.x(), this.position.y(), this.position.z());
+                Vector3fc position = getPosition();
+                glUniform3f(this.positionLocation, position.x(), position.y(), position.z());
                 this.positionRequiresUpdate = false;
             }
             if (this.ambientRequiresUpdate) {
-                glUniform3f(this.ambientLocation, this.ambient.x(), this.ambient.y(), this.ambient.z());
+                Vector3fc ambient = getAmbient();
+                glUniform3f(this.ambientLocation, ambient.x(), ambient.y(), ambient.z());
                 this.positionRequiresUpdate = false;
             }
             if (this.diffuseRequiresUpdate) {
-                glUniform3f(this.diffuseLocation, this.diffuse.x(), this.diffuse.y(), this.diffuse.z());
+                Vector3fc diffuse = getDiffuse();
+                glUniform3f(this.diffuseLocation, diffuse.x(), diffuse.y(), diffuse.z());
                 this.diffuseRequiresUpdate = false;
             }
         }
@@ -261,11 +303,12 @@ public class GeometryProgram {
     private final Vector3f sunAmbient = new Vector3f();
     private final Vector3f sunDiffuse = new Vector3f();
     
-    private final PointLight[] lights = new PointLight[MAX_AMOUNT_OF_LIGHTS];
+    private final PointLightUniforms[] lightsUniforms = new PointLightUniforms[MAX_AMOUNT_OF_LIGHTS];
+    private final List<PointLight> lights = new ArrayList<>();
     
     private GeometryProgram() {
-        for (int i = 0; i < this.lights.length; i++) {
-            this.lights[i] = new PointLight(i);
+        for (int i = 0; i < this.lightsUniforms.length; i++) {
+            this.lightsUniforms[i] = new PointLightUniforms(i);
         }
     }
 
@@ -304,30 +347,38 @@ public class GeometryProgram {
     public Vector3fc getSunDiffuse() {
         return sunDiffuse;
     }
-    
-    public PointLight registerPointLight() {
-        for (int i = 0; i < this.lights.length; i++) {
-            PointLight p = this.lights[i];
-            if (!p.isEnabled()) {
-                p.setEnabled(true);
-                p.setPosition(0f, 0f, 0f);
-                p.setDiffuse(0.8f, 0.8f, 0.8f);
-                p.setAmbient(0.2f, 0.2f, 0.2f);
-                return p;
-            }
-        }
-        return null;
-    }
-    
-    public void unregisterPointLight(PointLight p) {
-        if (p == null) {
-            return;
-        }
-        p.setEnabled(false);
+
+    public List<PointLight> getLights() {
+        return lights;
     }
     
     public void updateLightsUniforms() {
-        for (PointLight p:this.lights) {
+        int uniformsIndex = 0;
+        int lightsIndex = 0;
+        while (uniformsIndex < this.lightsUniforms.length) {
+            PointLightUniforms uniforms = this.lightsUniforms[uniformsIndex];
+            if (lightsIndex >= this.lights.size()) {
+                uniforms.setEnabled(false);
+                uniformsIndex++;
+                continue;
+            }
+            
+            PointLight light = this.lights.get(lightsIndex);
+            if (light == null || !light.isEnabled()) {
+                lightsIndex++;
+                continue;
+            }
+            
+            uniforms.setEnabled(true);
+            uniforms.setPosition(light.getPosition());
+            uniforms.setDiffuse(light.getDiffuse());
+            uniforms.setAmbient(light.getAmbient());
+            
+            uniformsIndex++;
+            lightsIndex++;
+        }
+        
+        for (PointLightUniforms p:this.lightsUniforms) {
             p.updateUniforms();
         }
     }

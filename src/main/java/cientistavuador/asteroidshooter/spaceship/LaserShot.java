@@ -51,7 +51,7 @@ public class LaserShot implements Aab {
     public static final float LASER_HEIGHT = 0.030f;
 
     public static final float LASER_SPEED = 2.5f;
-    
+
     public static final float LASER_MIN_DAMAGE = 10f;
     public static final float LASER_MAX_DAMAGE = 25f;
     public static final float LASER_MAX_DAMAGE_WITH_FALLOFF = 10000f;
@@ -63,9 +63,9 @@ public class LaserShot implements Aab {
     private final Matrix4f model = new Matrix4f();
 
     private final float damage = (float) (LASER_MIN_DAMAGE + ((LASER_MAX_DAMAGE - LASER_MIN_DAMAGE) * Math.random()));
-    
-    private final GeometryProgram.PointLight laserLight;
-    
+
+    private final GeometryProgram.PointLight laserLight = new GeometryProgram.PointLight();
+
     private int laserShotAudioSource;
     private boolean hitAsteroidOrScreen = false;
     private boolean frozen = false;
@@ -87,12 +87,10 @@ public class LaserShot implements Aab {
         } else {
             this.laserShotAudioSource = 0;
         }
-        this.laserLight = GeometryProgram.INSTANCE.registerPointLight();
-        if (this.laserLight != null) {
-            this.laserLight.setPosition(position);
-            this.laserLight.setAmbient(0.0f, 0.008f, 0.0f);
-            this.laserLight.setDiffuse(0.0f, 0.020f, 0.0f);
-        }
+        this.laserLight.setPosition(position);
+        this.laserLight.setAmbient(0.0f, 0.008f, 0.0f);
+        this.laserLight.setDiffuse(0.0f, 0.020f, 0.0f);
+        GeometryProgram.INSTANCE.getLights().add(this.laserLight);
     }
 
     public boolean isAudioEnabled() {
@@ -122,7 +120,7 @@ public class LaserShot implements Aab {
     public float getDamage() {
         return damage;
     }
-    
+
     public float getDamageWithFalloff() {
         float d = this.damage / this.position.distance(this.spaceship.getPosition());
         if (Float.isInfinite(d) || Float.isNaN(d)) {
@@ -131,11 +129,11 @@ public class LaserShot implements Aab {
         d = Float.min(d, LASER_MAX_DAMAGE_WITH_FALLOFF);
         return d;
     }
-    
+
     public void onLaserRemoved() {
-        GeometryProgram.INSTANCE.unregisterPointLight(this.laserLight);
+        GeometryProgram.INSTANCE.getLights().remove(this.laserLight);
     }
-    
+
     public boolean shouldBeRemoved() {
         this.hitAsteroidOrScreen = !Spaceship.SCREEN_AAB.testAab2D(this) || this.hitAsteroidOrScreen;
         return this.hitAsteroidOrScreen;
@@ -151,10 +149,8 @@ public class LaserShot implements Aab {
                     (float) (this.direction.y() * Main.TPF * LASER_SPEED),
                     (float) (this.direction.z() * Main.TPF * LASER_SPEED)
             );
-            
-            if (this.laserLight != null) {
-                this.laserLight.setPosition(this.position);
-            }
+
+            this.laserLight.setPosition(this.position);
 
             if (this.laserShotAudioSource != 0) {
                 alSource3f(this.laserShotAudioSource, AL_VELOCITY, this.direction.x() * LASER_SPEED, this.direction.y() * LASER_SPEED, 0f);
@@ -181,7 +177,7 @@ public class LaserShot implements Aab {
                 }
             }
         }
-        
+
         GeometryProgram.INSTANCE.setModel(this.model);
         glDrawElements(GL_TRIANGLES, Geometries.LASER.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
