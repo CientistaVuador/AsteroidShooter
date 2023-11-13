@@ -32,5 +32,5 @@ jobs:
     - run: mkdir build && cp target/*.jar build
     - uses: actions/upload-artifact@v3
       with:
-        name: Package
+        name: Build Output
         path: build
