@@ -24,50 +24,54 @@
  *
  * For more information, please refer to <https://unlicense.org>
  */
-package cientistavuador.asteroidshooter.background;
+package cientistavuador.asteroidshooter.menus;
 
 import cientistavuador.asteroidshooter.Main;
 import cientistavuador.asteroidshooter.geometry.Geometries;
-import cientistavuador.asteroidshooter.shader.BackgroundProgram;
+import cientistavuador.asteroidshooter.shader.GUIProgram;
 import cientistavuador.asteroidshooter.texture.Textures;
+import org.joml.Matrix4f;
 import static org.lwjgl.opengl.GL33C.*;
 
 /**
  *
  * @author Cien
  */
-public class Background {
-
-    public Background() {
-
+public class SpaceshipLivesRender {
+    
+    public static final float SPACESHIP_LIFE_ICON_RENDER_SCALE = 0.2f;
+    
+    private final Matrix4f lifeRenderMatrix = new Matrix4f();
+    
+    public SpaceshipLivesRender() {
+        
     }
+    
+    public void loop(Matrix4f projectionView, int lives) {
+        //spaceship lives
+        GUIProgram.INSTANCE.use();
+        GUIProgram.INSTANCE.setProjectionView(projectionView);
+        GUIProgram.INSTANCE.setTextureUnit(0);
 
-    public void loop() {
-        float scaleX = 1f;
-        float scaleY = 1f;
+        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(Geometries.GUI.getVAO());
 
-        int windowWidth = Main.WIDTH;
-        int windowHeight = Main.HEIGHT;
+        for (int i = 0; i < 3; i++) {
+            setRenderMatrix(-1f + -0.1f + ((0.2f + 0.01f) * (i + 1)), 1f + -0.1f + -0.02f);
+            GUIProgram.INSTANCE.setModel(this.lifeRenderMatrix);
+            glBindTexture(GL_TEXTURE_2D, (lives <= i ? Textures.SPACESHIP_ICON_DESTROYED : Textures.SPACESHIP_ICON));
+            glDrawElements(GL_TRIANGLES, Geometries.GUI.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
 
-        if (windowWidth != windowHeight) {
-            if (windowWidth > windowHeight) {
-                scaleY = windowHeight / ((float)windowWidth);
-            } else {
-                scaleX = windowWidth / ((float)windowHeight);
-            }
+            Main.NUMBER_OF_DRAWCALLS++;
+            Main.NUMBER_OF_VERTICES += Geometries.GUI.getAmountOfIndices();
         }
-        
-        glUseProgram(BackgroundProgram.SHADER_PROGRAM);
-        BackgroundProgram.sendUniforms(scaleX, scaleY, Textures.PLANET_BACKGROUND);
-        glBindVertexArray(Geometries.BACKGROUND.getVAO());
-        
-        glDrawElements(GL_TRIANGLES, Geometries.BACKGROUND.getAmountOfIndices(), GL_UNSIGNED_INT, 0);
-
-        Main.NUMBER_OF_DRAWCALLS++;
-        Main.NUMBER_OF_VERTICES += Geometries.BACKGROUND.getAmountOfIndices();
 
         glBindVertexArray(0);
         glUseProgram(0);
     }
-
+    
+    private void setRenderMatrix(float x, float y) {
+        this.lifeRenderMatrix.identity().translate(x, y, 2f).scale(SPACESHIP_LIFE_ICON_RENDER_SCALE);
+    }
+    
 }

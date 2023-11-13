@@ -42,8 +42,8 @@ import static org.lwjgl.openal.AL11.*;
  */
 public class Score {
 
-    public static final int DEFAULT_HIGHEST_SCORE = 31700;
-    public static final int BASE_SCORE = 10000;
+    public static final int DEFAULT_HIGHEST_SCORE = 20000;
+    public static final int BASE_SCORE = 100;
 
     public static final GLFontSpecification SCORE_FONT = GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE.withSize(0.08f);
     public static final GLFontSpecification HIGHEST_SCORE_FONT = GLFontSpecifications.TEKTUR_REGULAR_0_06_BLUISH_WHITE.withSize(0.04f);
@@ -112,7 +112,7 @@ public class Score {
     public void loop(Matrix4f projectionView) {
         String[] text = {
             "Score:\n" + this.score + "\n",
-            "Highest Score:\n" + this.highestScore + (this.defaultScoreBeaten ? "" : " (By the creator)") + "\n"
+            "Highest Score:\n" + this.highestScore + (this.defaultScoreBeaten ? "" : " (BEAT MY RECORD!)") + "\n"
         };
         GLFontRenderer.render(-0.985f, -0.005f,
                 new GLFontSpecification[]{

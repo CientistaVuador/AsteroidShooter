@@ -35,17 +35,21 @@ import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
 import cientistavuador.asteroidshooter.util.Cursors;
+import cientistavuador.asteroidshooter.util.ImageToBase64Icon;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.joml.Vector3f;
 import static org.lwjgl.glfw.GLFW.*;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
+import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL33C.*;
 import org.lwjgl.opengl.GLDebugMessageCallback;
 import static org.lwjgl.opengl.KHRDebug.*;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 import static org.lwjgl.system.MemoryUtil.*;
 
 /**
@@ -63,7 +67,7 @@ public class Main {
     static {
         org.lwjgl.system.Configuration.LIBRARY_PATH.set("natives");
     }
-    
+
     public static class OpenGLErrorException extends RuntimeException {
 
         private static final long serialVersionUID = 1L;
@@ -121,7 +125,7 @@ public class Main {
         public void getMin(Vector3f min) {
             min.set(Main.MOUSE_X, Main.MOUSE_Y, 0f);
         }
-        
+
         @Override
         public void getMax(Vector3f max) {
             getMin(max);
@@ -129,6 +133,7 @@ public class Main {
     };
     public static final ConcurrentLinkedQueue<Runnable> MAIN_TASKS = new ConcurrentLinkedQueue<>();
     public static final Vector3f DEFAULT_CLEAR_COLOR = new Vector3f(0.2f, 0.4f, 0.6f);
+    public static final String WINDOW_ICON = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACRlgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJG2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkrYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG2StpYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbZK2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG1tkra2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNTW2Stra2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE1NbbbatraVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATW1tttq6upUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNbW222rq6lQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADE1tbba2traVNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsTW1tkra2tpY0AAAAAAAAAAAAAAAAAAAAAAAAAAAAACxNTW2Rtra2lTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAALE1tbXGWtraVMAAAAAAAAAAAAAAAAAAAAAAAAAAkJAAAAG1JSW2SkQAAACQkAAAAAAAAAAAAAG0AAAAAJCQkAAAAAEgkSG0AAAAAJCRIAAAAALYAAAAAbW0AAAAkSEgAAAAAKCgobQAAAAAkSEgAAAC2tgAAAAAAbQAAAEhISAAAAG1NbXGVtgAAJEhJSQAAANoAAAAAAABtbQAASEhJTZGRbW2Rura2tpVISElJAAC2tgAAAAAAAG1tbQAkSExUlZFtbbXaura2lTBISUkAtra2AAAAAAAAAG1tSSRITDR1lZFxkdq6urZ1MEhJSZG2tgAAAAAAAAAAbW1tSElMNFSVkZGRttraulQ0TG1tttq2AAAAAAAAAAAAbW1tbU00NHWRtbXZ2tqZNDRNkZG2tgAAAAAAAAAAAABtbW2RTTQ4VJXZ2drauXk4NE22kba2AAAAAAAAAAAAAG1tbZFMODhUlNn9/tq5WDg0TLaRtrYAAAAAAAAAAAAAAG1tkUxUOAAA2f3+2gAAODBMtpGRAAAAAAAAAAAAAAAASW2RTUwAAADZ2draAAAATEiRkZEAAAAAAAAAAAAAAAAASG1ISAAAAAAAAAAAAABISHFtAAAAAAAAAAAAAAAAAABITUgAAAAAAAAAAAAAAABIbW0AAAAAAAAAAAAAAAAAAChMSAAAAAAAAAAAAAAAAEhNTQAAAAAAAAAAAAAAAAAAJChIAAAAAAAAAAAAAAAAJCgoAAAAAAAAAA==";
     private static GLDebugMessageCallback DEBUG_CALLBACK = null;
 
     private static String debugSource(int source) {
@@ -217,6 +222,25 @@ public class Main {
 
         glfwSwapInterval(0);
 
+        ByteBuffer iconImageData = MemoryUtil.memAlloc(32 * 32 * 4);
+        try {
+            iconImageData.put(ImageToBase64Icon.base64IconTo32BitRGBAImage(WINDOW_ICON));
+            iconImageData.rewind();
+
+            GLFWImage.Buffer iconImage = GLFWImage
+                    .calloc(1)
+                    .width(32)
+                    .height(32)
+                    .pixels(iconImageData);
+            try {
+                glfwSetWindowIcon(WINDOW_POINTER, iconImage);
+            } finally {
+                MemoryUtil.memFree(iconImage);
+            }
+        } finally {
+            MemoryUtil.memFree(iconImageData);
+        }
+        
         if (glfwRawMouseMotionSupported()) {
             glfwSetInputMode(WINDOW_POINTER, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
         }

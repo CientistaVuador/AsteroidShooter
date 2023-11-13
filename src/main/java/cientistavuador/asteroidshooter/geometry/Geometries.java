@@ -39,6 +39,10 @@ public class Geometries {
     public static final MeshData LASER;
     public static final MeshData GUI;
     public static final MeshData BACKGROUND;
+    public static final MeshData DEBRIS_BODY;
+    public static final MeshData DEBRIS_COCKPIT;
+    public static final MeshData DEBRIS_LEFTWING;
+    public static final MeshData DEBRIS_RIGHTWING;
     
     static {
         MeshData[] meshes = GeometriesLoader.load(
@@ -46,7 +50,11 @@ public class Geometries {
                 "spaceship.obj",
                 "laser.obj",
                 "gui.obj",
-                "background.obj"
+                "background.obj",
+                "debris_body.obj",
+                "debris_cockpit.obj",
+                "debris_leftwing.obj",
+                "debris_rightwing.obj"
         );
         
         ASTEROID = meshes[0];
@@ -54,6 +62,10 @@ public class Geometries {
         LASER = meshes[2];
         GUI = meshes[3];
         BACKGROUND = meshes[4];
+        DEBRIS_BODY = meshes[5];
+        DEBRIS_COCKPIT = meshes[6];
+        DEBRIS_LEFTWING = meshes[7];
+        DEBRIS_RIGHTWING = meshes[8];
     }
     
     public static void init() {

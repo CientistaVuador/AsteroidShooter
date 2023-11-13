@@ -44,6 +44,8 @@ public class Textures {
     public static final int TITLE;
     public static final int BUTTON_HOVER;
     public static final int PLANET_BACKGROUND;
+    public static final int SPACESHIP_ICON;
+    public static final int SPACESHIP_ICON_DESTROYED;
     
     static {
         int[] textures = TexturesLoader.load(
@@ -56,7 +58,9 @@ public class Textures {
                 "controls.png",
                 "title.png",
                 "button_hover.png",
-                "planet_background.png"
+                "planet_background.png",
+                "spaceship_icon.png",
+                "spaceship_icon_destroyed.png"
         );
         
         STONE = textures[0];
@@ -69,6 +73,8 @@ public class Textures {
         TITLE = textures[7];
         BUTTON_HOVER = textures[8];
         PLANET_BACKGROUND = textures[9];
+        SPACESHIP_ICON = textures[10];
+        SPACESHIP_ICON_DESTROYED = textures[11];
         
         glActiveTexture(GL_TEXTURE0);
         
@@ -82,6 +88,12 @@ public class Textures {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
         glBindTexture(GL_TEXTURE_2D, PLANET_BACKGROUND);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, SPACESHIP_ICON);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        glBindTexture(GL_TEXTURE_2D, SPACESHIP_ICON_DESTROYED);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
         glBindTexture(GL_TEXTURE_2D, 0);

@@ -72,8 +72,8 @@ public class Spaceship implements Aab {
     public static final float SPACESHIP_SHOT_DELAY = 0.25f;
     public static final Vector2fc SPACESHIP_SHOT_LEFT_OFFSET = new Vector2f(-0.0225f, 0.09f);
     public static final Vector2fc SPACESHIP_SHOT_RIGHT_OFFSET = new Vector2f(0.0225f, 0.09f);
-    public static final Vector2fc SPACESHIP_DEATH_ZONE_ALERT_OFFSET = new Vector2f(0f, -0.078f);
-    public static final Vector2fc SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET = new Vector2f(0f, -0.024f);
+    public static final Vector2fc SPACESHIP_DEATH_ZONE_ALERT_OFFSET = new Vector2f(0f, -0.075f);
+    public static final Vector2fc SPACESHIP_DEATH_ASTEROID_ALARM_OFFSET = new Vector2f(0f, -0.0235f);
     public static final float SPACESHIP_DEATH_ASTEROID_ALARM_TIME = 1f;
 
     public static final float SPEED = 0.8f;
@@ -173,6 +173,7 @@ public class Spaceship implements Aab {
 
     public void onAsteroidHit(Asteroid s) {
         this.dead = true;
+        this.controller.onSpaceshipDestroyed(s);
     }
 
     public void loop(Matrix4f projectionView, AsteroidController asteroids) {

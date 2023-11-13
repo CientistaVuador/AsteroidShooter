@@ -41,6 +41,8 @@ public class Sounds {
     public static final NativeAudio ROCK_HIT;
     public static final NativeAudio ALARM;
     public static final NativeAudio PARTY_WHISTLE;
+    public static final NativeAudio SPACESHIP_EXPLOSION;
+    public static final NativeAudio GAME_OVER;
     
     static {
         NativeAudio[] sounds = SoundLoader.load(new String[] {
@@ -50,7 +52,9 @@ public class Sounds {
             "explosion.ogg",
             "rock_hit.ogg",
             "alarm.ogg",
-            "whistle.ogg"
+            "whistle.ogg",
+            "spaceship_explosion.ogg",
+            "game_over.ogg"
         });
         
         LASER = sounds[0];
@@ -60,6 +64,8 @@ public class Sounds {
         ROCK_HIT = sounds[4];
         ALARM = sounds[5];
         PARTY_WHISTLE = sounds[6];
+        SPACESHIP_EXPLOSION = sounds[7];
+        GAME_OVER = sounds[8];
     }
     
     public static void init() {
