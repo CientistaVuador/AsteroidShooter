@@ -35,8 +35,11 @@ import cientistavuador.asteroidshooter.ubo.UBOBindingPoints;
 import cientistavuador.asteroidshooter.util.ALSourceUtil;
 import cientistavuador.asteroidshooter.util.Aab;
 import cientistavuador.asteroidshooter.util.Cursors;
-import cientistavuador.asteroidshooter.util.ImageToBase64Icon;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -48,6 +51,7 @@ import org.lwjgl.opengl.GL;
 import static org.lwjgl.opengl.GL33C.*;
 import org.lwjgl.opengl.GLDebugMessageCallback;
 import static org.lwjgl.opengl.KHRDebug.*;
+import static org.lwjgl.stb.STBImage.*;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -133,7 +137,7 @@ public class Main {
     };
     public static final ConcurrentLinkedQueue<Runnable> MAIN_TASKS = new ConcurrentLinkedQueue<>();
     public static final Vector3f DEFAULT_CLEAR_COLOR = new Vector3f(0.2f, 0.4f, 0.6f);
-    public static final String WINDOW_ICON = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACRlgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJG2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkrYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG2StpYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbZK2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG1tkra2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNTW2Stra2tgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE1NbbbatraVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATW1tttq6upUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNbW222rq6lQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADE1tbba2traVNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsTW1tkra2tpY0AAAAAAAAAAAAAAAAAAAAAAAAAAAAACxNTW2Rtra2lTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAALE1tbXGWtraVMAAAAAAAAAAAAAAAAAAAAAAAAAAkJAAAAG1JSW2SkQAAACQkAAAAAAAAAAAAAG0AAAAAJCQkAAAAAEgkSG0AAAAAJCRIAAAAALYAAAAAbW0AAAAkSEgAAAAAKCgobQAAAAAkSEgAAAC2tgAAAAAAbQAAAEhISAAAAG1NbXGVtgAAJEhJSQAAANoAAAAAAABtbQAASEhJTZGRbW2Rura2tpVISElJAAC2tgAAAAAAAG1tbQAkSExUlZFtbbXaura2lTBISUkAtra2AAAAAAAAAG1tSSRITDR1lZFxkdq6urZ1MEhJSZG2tgAAAAAAAAAAbW1tSElMNFSVkZGRttraulQ0TG1tttq2AAAAAAAAAAAAbW1tbU00NHWRtbXZ2tqZNDRNkZG2tgAAAAAAAAAAAABtbW2RTTQ4VJXZ2drauXk4NE22kba2AAAAAAAAAAAAAG1tbZFMODhUlNn9/tq5WDg0TLaRtrYAAAAAAAAAAAAAAG1tkUxUOAAA2f3+2gAAODBMtpGRAAAAAAAAAAAAAAAASW2RTUwAAADZ2draAAAATEiRkZEAAAAAAAAAAAAAAAAASG1ISAAAAAAAAAAAAABISHFtAAAAAAAAAAAAAAAAAABITUgAAAAAAAAAAAAAAABIbW0AAAAAAAAAAAAAAAAAAChMSAAAAAAAAAAAAAAAAEhNTQAAAAAAAAAAAAAAAAAAJChIAAAAAAAAAAAAAAAAJCgoAAAAAAAAAA==";
+    public static final String WINDOW_ICON = "cientistavuador/asteroidshooter/resources/image/spaceship_window_icon.png";
     private static GLDebugMessageCallback DEBUG_CALLBACK = null;
 
     private static String debugSource(int source) {
@@ -222,25 +226,79 @@ public class Main {
 
         glfwSwapInterval(0);
 
-        ByteBuffer iconImageData = MemoryUtil.memAlloc(32 * 32 * 4);
-        try {
-            iconImageData.put(ImageToBase64Icon.base64IconTo32BitRGBAImage(WINDOW_ICON));
-            iconImageData.rewind();
+        loadWindowIcon:
+        {
+            System.out.println("Loading window icon...");
 
-            GLFWImage.Buffer iconImage = GLFWImage
-                    .calloc(1)
-                    .width(32)
-                    .height(32)
-                    .pixels(iconImageData);
-            try {
-                glfwSetWindowIcon(WINDOW_POINTER, iconImage);
-            } finally {
-                MemoryUtil.memFree(iconImage);
+            if (WINDOW_ICON == null) {
+                System.out.println("Window icon is null.");
+                break loadWindowIcon;
             }
-        } finally {
-            MemoryUtil.memFree(iconImageData);
+
+            URL iconUrl = ClassLoader.getSystemResource(WINDOW_ICON);
+            if (iconUrl == null) {
+                System.out.println("Warning: Window icon '" + WINDOW_ICON + "' not found.");
+                break loadWindowIcon;
+            }
+
+            ByteBuffer iconData = null;
+
+            try {
+                URLConnection connection = iconUrl.openConnection();
+                connection.connect();
+                
+                iconData = MemoryUtil.memAlloc(connection.getContentLength());
+
+                try (InputStream iconStream = connection.getInputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int read;
+                    while ((read = iconStream.read(buffer)) != -1) {
+                        iconData.put(buffer, 0, read);
+                    }
+                }
+                
+                iconData.rewind();
+            } catch (IOException ex) {
+                System.out.println("Warning: Failed to read window icon '"+WINDOW_ICON+"'");
+                ex.printStackTrace(System.out);
+                if (iconData != null) {
+                    MemoryUtil.memFree(iconData);
+                }
+                break loadWindowIcon;
+            }
+            
+            ByteBuffer iconRawData;
+            int[] width = {0};
+            int[] height = {0};
+            try {
+                iconRawData = stbi_load_from_memory(iconData, width, height, new int[1], 4);
+            } finally {
+                MemoryUtil.memFree(iconData);
+            }
+            
+            if (iconRawData == null) {
+                System.out.println("Warning: Window icon '"+WINDOW_ICON+"' not supported; "+stbi_failure_reason());
+                break loadWindowIcon;
+            }
+            
+            try {
+                GLFWImage.Buffer iconImage = GLFWImage.calloc(1);
+                try {
+                    iconImage
+                            .width(width[0])
+                            .height(height[0])
+                            .pixels(iconRawData);
+                    
+                    glfwSetWindowIcon(WINDOW_POINTER, iconImage);
+                    System.out.println("Finished loading window icon; width="+width[0]+", height="+height[0]+", path='"+WINDOW_ICON+"'");
+                } finally {
+                    MemoryUtil.memFree(iconImage);
+                }
+            } finally {
+                MemoryUtil.memFree(iconRawData);
+            }
         }
-        
+
         if (glfwRawMouseMotionSupported()) {
             glfwSetInputMode(WINDOW_POINTER, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
         }

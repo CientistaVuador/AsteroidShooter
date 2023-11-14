@@ -68,7 +68,7 @@ public class BackgroundProgram {
             """
     );
     
-    public static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM, "scale", "background");
+    public static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM);
     
     public static void sendUniforms(float scaleX, float scaleY, int backgroundTexture) {
         glUniform2f(UNIFORMS.locationOf("scale"), scaleX, scaleY);

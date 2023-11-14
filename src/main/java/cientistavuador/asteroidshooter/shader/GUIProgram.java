@@ -79,9 +79,7 @@ public class GUIProgram {
             """
     );
     
-    private static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM, 
-            "projectionView", "model", "tex"
-    );
+    private static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM);
     
     public static final GUIProgram INSTANCE = new GUIProgram();
     

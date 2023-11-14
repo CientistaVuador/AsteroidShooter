@@ -277,17 +277,7 @@ public class GeometryProgram {
             }}
     );
     
-    private static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM, 
-            "projectionView",
-            "model",
-            "color",
-            "tex",
-            "normalModel",
-            "sunDirection",
-            "sunAmbient",
-            "sunDiffuse",
-            "lightingEnabled"
-    );
+    private static final BetterUniformSetter UNIFORMS = new BetterUniformSetter(SHADER_PROGRAM);
     
     public static final GeometryProgram INSTANCE = new GeometryProgram();
     

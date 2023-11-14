@@ -61,12 +61,14 @@ public class BetterUniformSetter {
     private final String[] uniforms;
     private final Map<String, Integer> locations = new HashMap<>();
     
-    public BetterUniformSetter(int program, String... uniforms) {
+    public BetterUniformSetter(int program) {
         this.program = program;
-        this.uniforms = uniforms.clone();
         
-        for (String s:uniforms) {
-            locations.put(s, glGetUniformLocation(program, s));
+        this.uniforms = new String[glGetProgrami(program, GL_ACTIVE_UNIFORMS)];
+        for (int i = 0; i < this.uniforms.length; i++) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                this.uniforms[i] = glGetActiveUniform(program, i, stack.callocInt(1), stack.callocInt(1));
+            }
         }
     }
 
