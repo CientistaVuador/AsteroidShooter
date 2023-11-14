@@ -67,7 +67,9 @@ public class BetterUniformSetter {
         this.uniforms = new String[glGetProgrami(program, GL_ACTIVE_UNIFORMS)];
         for (int i = 0; i < this.uniforms.length; i++) {
             try (MemoryStack stack = MemoryStack.stackPush()) {
-                this.uniforms[i] = glGetActiveUniform(program, i, stack.callocInt(1), stack.callocInt(1));
+                String uniform = glGetActiveUniform(program, i, stack.callocInt(1), stack.callocInt(1));
+                this.uniforms[i] = uniform;
+                this.locations.put(uniform, glGetUniformLocation(program, uniform));
             }
         }
     }
